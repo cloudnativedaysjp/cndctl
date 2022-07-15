@@ -4,6 +4,7 @@ import source
 import mediasource
 import streaming
 import recording
+import text
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

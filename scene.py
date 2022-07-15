@@ -1,11 +1,10 @@
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 import asyncio
 import simpleobsws
 import os
 import sys
 
-# obsctl scene get
+# cndctl scene get
 async def get(ws):
     request = simpleobsws.Request('GetSceneList')
 
@@ -29,10 +28,10 @@ async def get(ws):
     else:
         logging.info("nextScene: [{}]{}".format(nextSceneIndex, scenes[nextSceneIndex]))
 
-# obsctl scene next
+# cndctl scene next
 async def next(ws):
     logging.debug("set_next()")
 
-# obsctl scene set {sceneName}
+# cndctl scene set {sceneName}
 async def set(ws, sceneName):
     logging.debug("set_scene({})".format(sceneName))

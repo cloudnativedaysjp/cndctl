@@ -10,17 +10,21 @@ import time
 async def get(ws):
     logging.debug("set_mediasource()")
 
-# obsctl get mediasource time {mediasourceName}
-async def time(ws, mediasourceName):
-    logging.debug("get_mediasource_time({})".format(mediasourceName))
+# cndctl mediasource time {sourceName}
+async def time(ws, sourceName):
+    logging.debug("get_mediasource_time({})".format(sourceName))
     while True:
-        request = simpleobsws.Request('GetMediaInputStatus', {'inputName': mediasourceName})
+        request = simpleobsws.Request('GetMediaInputStatus', {'inputName': sourceName})
 
-        ret = await ws.call(request) # Perform the request
-        if ret.ok(): # Check if the request succeeded
+        ret = await ws.call(request)
+        if ret.ok():
             state = ret.responseData['mediaState']
             cursor = datetime.timedelta(milliseconds=ret.responseData['mediaCursor'])
             duration = datetime.timedelta(milliseconds=ret.responseData['mediaDuration'])
             cursor_parcent = (cursor / duration) * 100
             print("\r[{}]: {:.1f}% | {} / {}".format(state, cursor_parcent, cursor, duration), end="")
             # time.sleep(1)
+
+# cndctl mediasource get
+async def get(ws):
+    logging.debug("get_mediasource")

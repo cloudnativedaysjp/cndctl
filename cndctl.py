@@ -19,7 +19,7 @@ parser.add_argument("--obs-host", required=True)
 parser.add_argument("--obs-port", required=True)
 parser.add_argument("--obs-password", required=True)
 parser.add_argument("--sceneName")
-parser.add_argument("--mediasourceName")
+parser.add_argument("--sourceName")
 
 args = parser.parse_args()
 HOST = args.obs_host
@@ -67,10 +67,10 @@ def main():
         if args.operator == "get":
             loop.run_until_complete(mediasource.get(ws=ws))
         elif args.operator == "time":
-            if not args.mediasourceName:
-                logging.error("not found argment: --mediasourceName")
+            if not args.sourceName:
+                logging.error("not found argment: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws=ws, mediasourceName=args.mediasourceName))
+            loop.run_until_complete(mediasource.time(ws=ws, sourceName=args.sourceName))
 
     # streaming
     elif args.object == "streaming":
@@ -86,7 +86,7 @@ def main():
         elif args.operator == "stop":
             loop.run_until_complete(recording.stop(ws=ws))
     else:
-        logging.info(args)
+        logging.info("undefined command: {}".format(args))
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,9 @@
-# obsctl
+# cndctl
 
 ## subcoomand
 
 ```
-obsctl
+cndctl
   scene
     get
     next
@@ -21,4 +21,9 @@ obsctl
   recording
     start
     stop
+  text
+    edit
+    delete
+    on
+    off
 ```

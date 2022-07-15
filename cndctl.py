@@ -42,11 +42,11 @@ def main():
     if args.object == "scene":
         if args.operator == "get":
             loop.run_until_complete(scene.get(ws=ws))
-        elif args.operator == "set":
+        elif args.operator == "change":
             if not args.sceneName:
                 logging.error("not found argment: --sceneName")
                 sys.exit()
-            loop.run_until_complete(scene.set(ws=ws, sceneName=args.sceneName))
+            loop.run_until_complete(scene.change(ws=ws, sceneName=args.sceneName))
         elif args.operator == "next":
             loop.run_until_complete(scene.next(ws=ws))
 

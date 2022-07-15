@@ -33,5 +33,26 @@ async def next(ws):
     logging.debug("set_next()")
 
 # cndctl scene set {sceneName}
-async def set(ws, sceneName):
+async def change(ws, sceneName):
     logging.debug("set_scene({})".format(sceneName))
+
+    request = simpleobsws.Request('GetSceneList')
+
+    ret = await ws.call(request)
+    if not ret.ok():
+        logging.error("Request error. Request:{} Response:{}".format(request, ret))
+        sys.exit()
+    scenes = ret.responseData['scenes']
+    
+    if not [True for scene in scenes if scene['sceneName'] == sceneName]:
+        logging.info("Not found scene: {}".format(sceneName))
+        sys.exit()
+
+    request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': sceneName})
+
+    ret = await ws.call(request)
+    if not ret.ok():
+        logging.error("Request error. \n  Request:{} \n  Response:{}".format(request, ret))
+        sys.exit()
+    
+    logging.info("scene changed: {}".format(sceneName))

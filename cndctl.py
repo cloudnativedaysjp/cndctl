@@ -7,25 +7,39 @@ import recording
 import text
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(message)s')
 import asyncio
 import simpleobsws
 import sys
+import os
 import argparse
 
+# envirouments
+HOST = os.environ["WSHOST"]
+PORT = os.environ["WSPORT"]
+PASS = os.environ["WSPASS"]
+
+# json
+
+
+# command option 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
 parser.add_argument("operator")
-parser.add_argument("--obs-host", required=True)
-parser.add_argument("--obs-port", required=True)
-parser.add_argument("--obs-password", required=True)
+parser.add_argument("--obs-host")
+parser.add_argument("--obs-port")
+parser.add_argument("--obs-password")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
 
 args = parser.parse_args()
-HOST = args.obs_host
-PORT = args.obs_port
-PASS = args.obs_password
+
+if not HOST:
+    HOST = args.obs_host
+if not PORT:
+    PORT = args.obs_port
+if not PASS:
+    PASS = args.obs_password
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
 ws = simpleobsws.WebSocketClient(url = f'ws://{HOST}:{PORT}', password = PASS, identification_parameters = parameters)
@@ -87,7 +101,7 @@ def main():
         elif args.operator == "stop":
             loop.run_until_complete(recording.stop(ws=ws))
     else:
-        logging.info("undefined command: {}".format(args))
+        print("undefined command: {}".format(args))
 
 if __name__ == "__main__":
     main()

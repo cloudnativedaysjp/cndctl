@@ -13,10 +13,11 @@ async def get(ws):
         logging.error("Request error. Request:{} Response:{}".format(request, ret))
         sys.exit()
     scenes = ret.responseData['scenes']
-    print(ret)
+    logging.info(ret)
 
     for scene in reversed(scenes):
         logging.info("scene[{}]: {}".format(scene['sceneIndex'], scene['sceneName']))
+        print(scene['sceneName'])
 
 
 # cndctl scene next
@@ -30,7 +31,7 @@ async def next(ws):
         logging.error("Request error. Request:{} Response:{}".format(request, ret))
         sys.exit()
     scenes = ret.responseData['scenes']
-    print(scenes)
+    logging.info(scenes)
 
     currentProgramSceneIndex =  [scene['sceneIndex'] for scene in scenes if scene['sceneName'] == ret.responseData['currentProgramSceneName']][0]
     currentProgramSceneName = ret.responseData['currentProgramSceneName']

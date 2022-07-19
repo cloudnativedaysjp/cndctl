@@ -30,13 +30,20 @@ parser.add_argument("--sourceName")
 
 args = parser.parse_args()
 
+obsHost = ""
+obsPort = ""
+obsPass = ""
+dkUrl = ""
+dkClientId = ""
+dkClientSecrets = ""
+
 # envirouments
 if "WSHOST" in os.environ:
-    HOST = os.environ["WSHOST"]
+    obsHost= os.environ["WSHOST"]
 if "WSPORT" in os.environ:
-    PORT = os.environ["WSPORT"]
+    obsPort= os.environ["WSPORT"]
 if "WSPASS" in os.environ:
-    PASS = os.environ["WSPASS"]
+    obsPass= os.environ["WSPASS"]
 if "DK_URL" in os.environ:
     dkUrl = os.environ["DK_URL"]
 if "DK_CLIENT_ID" in os.environ:
@@ -45,36 +52,37 @@ if "DK_CLIENT_SECRET" in os.environ:
     dkClientSecrets = os.environ["DK_CLIENT_SECRET"]
 
 # json
-secretFilePath = args.secret
-with open(secretFilePath) as f:
-    secret = json.loads(f.read())
 
-if "obs" in secret:
-    obs = secret['obs']
-    logging.debug(obs)
+if args.secret:
+    with open(args.secret) as f:
+        secret = json.loads(f.read())
 
-    if secret['obs']['host']:
-        HOST = secret['obs']['host']
-    if secret['obs']['port']:
-        PORT = secret['obs']['port']
-    if secret['obs']['password']:
-        PASS = secret['obs']['password']
+    if "obs" in secret:
+        obs = secret['obs']
+        logging.debug(obs)
 
-if "dreamkast" in secret:
-    if secret['dreamkast']['url']:
-        dkUrl = secret['dreamkast']['url']
-    if secret['dreamkast']['client_id']:
-        dkClientId = secret['dreamkast']['client_id']
-    if secret['dreamkast']['client_secrets']:
-        dkClientSecrets = secret['dreamkast']['client_secrets']
+        if "host" in secret['obs'] and secret['obs']['host']:
+            obsHost= secret['obs']['host']
+        if "port" in secret['obs'] and secret['obs']['port']:
+            obsPort= secret['obs']['port']
+        if "password" in secret['obs'] and secret['obs']['password']:
+            obsPass= secret['obs']['password']
 
-# command option 
+    if "dreamkast" in secret:
+        if "url" in secret['dreamkast'] and secret['dreamkast']['url']:
+            dkUrl = secret['dreamkast']['url']
+        if "client_id" in secret['dreamkast'] and secret['dreamkast']['client_id']:
+            dkClientId = secret['dreamkast']['client_id']
+        if "client_secrets" in secret['dreamkast'] and secret['dreamkast']['client_secrets']:
+            dkClientSecrets = secret['dreamkast']['client_secrets']
+
+# command option
 if args.obs_host:
-    HOST = args.obs_host
+    obsHost= args.obs_host
 if args.obs_port:
-    PORT = args.obs_port
+    obsPort= args.obs_port
 if args.obs_password:
-    PASS = args.obs_password
+    obsPass= args.obs_password
 if args.dk_url:
     dkUrl = args.dk_url
 if args.dk_client_id:
@@ -82,10 +90,10 @@ if args.dk_client_id:
 if args.dk_client_secrets:
     dkClientSecrets = args.dk_client_secrets
 
-logging.info("{}:{}({})".format(HOST, PORT, PASS))
+logging.info("{}:{}({})".format(obsHost, obsPort, obsPass))
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = f'ws://{HOST}:{PORT}', password = PASS, identification_parameters = parameters)
+ws = simpleobsws.WebSocketClient(url = f'ws://{obsHost}:{obsPort}', password = obsPass, identification_parameters = parameters)
 
 async def init():
     await ws.connect()
@@ -101,7 +109,7 @@ def main():
             loop.run_until_complete(scene.get(ws=ws))
         elif args.operator == "change":
             if not args.sceneName:
-                logging.error("not found argment: --sceneName")
+                logging.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(ws=ws, sceneName=args.sceneName))
         elif args.operator == "next":
@@ -116,7 +124,7 @@ def main():
     elif args.object == "source":
         if args.operator == "get":
             if not args.sceneName:
-                logging.error("not found argment: --sceneName")
+                logging.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(ws=ws, sceneName=args.sceneName))
 
@@ -126,7 +134,7 @@ def main():
             loop.run_until_complete(mediasource.get(ws=ws))
         elif args.operator == "time":
             if not args.sourceName:
-                logging.error("not found argment: --sourceName")
+                logging.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(ws=ws, sourceName=args.sourceName))
 

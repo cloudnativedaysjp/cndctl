@@ -18,12 +18,15 @@ import argparse
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
 parser.add_argument("operator")
+parser.add_argument("--secret")
 parser.add_argument("--obs-host")
 parser.add_argument("--obs-port")
 parser.add_argument("--obs-password")
+parser.add_argument("--dk-url")
+parser.add_argument("--dk-client-id")
+parser.add_argument("--dk-client-secrets")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
-parser.add_argument("--secret")
 
 args = parser.parse_args()
 
@@ -34,6 +37,12 @@ if "WSPORT" in os.environ:
     PORT = os.environ["WSPORT"]
 if "WSPASS" in os.environ:
     PASS = os.environ["WSPASS"]
+if "DK_URL" in os.environ:
+    dkUrl = os.environ["DK_URL"]
+if "DK_CLIENT_ID" in os.environ:
+    dkClientId = os.environ["DK_CLIENT_ID"]
+if "DK_CLIENT_SECRET" in os.environ:
+    dkClientSecrets = os.environ["DK_CLIENT_SECRET"]
 
 # json
 secretFilePath = args.secret
@@ -52,17 +61,26 @@ if "obs" in secret:
         PASS = secret['obs']['password']
 
 if "dreamkast" in secret:
-    dreamkast = secret['dreamkast']
-    print(dreamkast)
+    if secret['dreamkast']['url']:
+        dkUrl = secret['dreamkast']['url']
+    if secret['dreamkast']['client_id']:
+        dkClientId = secret['dreamkast']['client_id']
+    if secret['dreamkast']['client_secrets']:
+        dkClientSecrets = secret['dreamkast']['client_secrets']
 
 # command option 
-
 if args.obs_host:
     HOST = args.obs_host
 if args.obs_port:
     PORT = args.obs_port
 if args.obs_password:
     PASS = args.obs_password
+if args.dk_url:
+    dkUrl = args.dk_url
+if args.dk_client_id:
+    dkClientId = args.dk_client_id
+if args.dk_client_secrets:
+    dkClientSecrets = args.dk_client_secrets
 
 logging.info("{}:{}({})".format(HOST, PORT, PASS))
 

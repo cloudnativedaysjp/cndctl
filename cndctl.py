@@ -12,17 +12,9 @@ import asyncio
 import simpleobsws
 import sys
 import os
+import json
 import argparse
 
-# envirouments
-HOST = os.environ["WSHOST"]
-PORT = os.environ["WSPORT"]
-PASS = os.environ["WSPASS"]
-
-# json
-
-
-# command option 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
 parser.add_argument("operator")
@@ -31,15 +23,48 @@ parser.add_argument("--obs-port")
 parser.add_argument("--obs-password")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
+parser.add_argument("--secret")
 
 args = parser.parse_args()
 
-if not HOST:
+# envirouments
+if "WSHOST" in os.environ:
+    HOST = os.environ["WSHOST"]
+if "WSPORT" in os.environ:
+    PORT = os.environ["WSPORT"]
+if "WSPASS" in os.environ:
+    PASS = os.environ["WSPASS"]
+
+# json
+secretFilePath = args.secret
+with open(secretFilePath) as f:
+    secret = json.loads(f.read())
+
+if "obs" in secret:
+    obs = secret['obs']
+    logging.debug(obs)
+
+    if secret['obs']['host']:
+        HOST = secret['obs']['host']
+    if secret['obs']['port']:
+        PORT = secret['obs']['port']
+    if secret['obs']['password']:
+        PASS = secret['obs']['password']
+
+if "dreamkast" in secret:
+    dreamkast = secret['dreamkast']
+    print(dreamkast)
+
+# command option 
+
+if args.obs_host:
     HOST = args.obs_host
-if not PORT:
+if args.obs_port:
     PORT = args.obs_port
-if not PASS:
+if args.obs_password:
     PASS = args.obs_password
+
+logging.info("{}:{}({})".format(HOST, PORT, PASS))
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
 ws = simpleobsws.WebSocketClient(url = f'ws://{HOST}:{PORT}', password = PASS, identification_parameters = parameters)

@@ -32,29 +32,29 @@ parser.add_argument("--sourceName")
 
 args = parser.parse_args()
 
-obsHost = ""
-obsPort = ""
-obsPass = ""
-dkUrl = ""
-dkAuth0Url = ""
-dkClientId = ""
-dkClientSecrets = ""
+OBS_HOST = ""
+OBS_PORT = ""
+OBS_PASS = ""
+DK_URL = ""
+DK_AUTH0_URL = ""
+DK_CLIENT_ID = ""
+DK_CLIENT_SECRETS = ""
 
 # envirouments
 if "WSHOST" in os.environ:
-    obsHost= os.environ["WSHOST"]
+    OBS_HOST= os.environ["WSHOST"]
 if "WSPORT" in os.environ:
-    obsPort= os.environ["WSPORT"]
+    OBS_PORT= os.environ["WSPORT"]
 if "WSPASS" in os.environ:
-    obsPass= os.environ["WSPASS"]
+    OBS_PASS= os.environ["WSPASS"]
 if "DK_URL" in os.environ:
-    dkUrl = os.environ["DK_URL"]
+    DK_URL = os.environ["DK_URL"]
 if "DK_AUTH0_URL" in os.environ:
-    dkAuth0Url = os.environ["DK_AUTH0_URL"]
+    DK_AUTH0_URL = os.environ["DK_AUTH0_URL"]
 if "DK_CLIENT_ID" in os.environ:
-    dkClientId = os.environ["DK_CLIENT_ID"]
+    DK_CLIENT_ID = os.environ["DK_CLIENT_ID"]
 if "DK_CLIENT_SECRET" in os.environ:
-    dkClientSecrets = os.environ["DK_CLIENT_SECRET"]
+    DK_CLIENT_SECRETS = os.environ["DK_CLIENT_SECRET"]
 
 # json
 
@@ -67,35 +67,35 @@ if args.secret:
         logging.debug(obs)
 
         if "host" in secret['obs'] and secret['obs']['host']:
-            obsHost= secret['obs']['host']
+            OBS_HOST= secret['obs']['host']
         if "port" in secret['obs'] and secret['obs']['port']:
-            obsPort= secret['obs']['port']
+            OBS_PORT= secret['obs']['port']
         if "password" in secret['obs'] and secret['obs']['password']:
-            obsPass= secret['obs']['password']
+            OBS_PASS= secret['obs']['password']
 
     if "dreamkast" in secret:
         if "url" in secret['dreamkast'] and secret['dreamkast']['url']:
-            dkUrl = secret['dreamkast']['url']
+            DK_URL = secret['dreamkast']['url']
         if "auth0_url" in secret['dreamkast'] and secret['dreamkast']['auth0_url']:
-            dkAuth0Url = secret['dreamkast']['auth0_url']
+            DK_AUTH0_URL = secret['dreamkast']['auth0_url']
         if "client_id" in secret['dreamkast'] and secret['dreamkast']['client_id']:
-            dkClientId = secret['dreamkast']['client_id']
+            DK_CLIENT_ID = secret['dreamkast']['client_id']
         if "client_secrets" in secret['dreamkast'] and secret['dreamkast']['client_secrets']:
-            dkClientSecrets = secret['dreamkast']['client_secrets']
+            DK_CLIENT_SECRETS = secret['dreamkast']['client_secrets']
 
 # command option
 if args.obs_host:
-    obsHost= args.obs_host
+    OBS_HOST= args.obs_host
 if args.obs_port:
-    obsPort= args.obs_port
+    OBS_PORT= args.obs_port
 if args.obs_password:
-    obsPass= args.obs_password
+    OBS_PASS= args.obs_password
 if args.dk_url:
-    dkUrl = args.dk_url
+    DK_URL = args.dk_url
 if args.dk_client_id:
-    dkClientId = args.dk_client_id
+    DK_CLIENT_ID = args.dk_client_id
 if args.dk_client_secrets:
-    dkClientSecrets = args.dk_client_secrets
+    DK_CLIENT_SECRETS = args.dk_client_secrets
 
 logging.info("{}:{}({})".format(obsHost, obsPort, obsPass))
 
@@ -110,19 +110,20 @@ def main():
 
     if args.object == "dk":
         if args.operator == "update":
-            if not dkAuth0Url:
+            if not DK_AUTH0_URL:
                 print("No enough options: --dk-auth0-url")
                 sys.exit()
-            if not dkClientId:
+            if not DK_CLIENT_ID:
                 print("No enough options: --dk-client-id")
                 sys.exit()
-            if not dkClientSecrets:
+            if not DK_CLIENT_SECRETS:
                 print("No enough options: --dk-client-secrets")
                 sys.exit()
-            dreamkast.update(dkAuth0Url=dkAuth0Url, dkClientId=dkClientId, dkClientSecrets=dkClientSecrets)
+            dreamkast.update(DK_AUTH0_URL=DK_AUTH0_URL, DK_CLIENT_ID=DK_CLIENT_ID, DK_CLIENT_SECRETS=DK_CLIENT_SECRETS)
+        sys.exit()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(obsinit())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(obsinit())
 
     # scene
     if args.object == "scene":
@@ -154,10 +155,10 @@ def main():
         if args.operator == "get":
             loop.run_until_complete(mediasource.get(ws=ws))
         elif args.operator == "time":
-            if not args.sourceName:
-                logging.error("No enough options: --sourceName")
+            if not args.source_name:
+                logging.error("No enough options: --source_name")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws=ws, sourceName=args.sourceName))
+            loop.run_until_complete(mediasource.time(ws=ws, source_name=args.source_name))
 
     # streaming
     elif args.object == "streaming":

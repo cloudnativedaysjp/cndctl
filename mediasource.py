@@ -10,11 +10,11 @@ import time
 async def get(ws):
     logging.debug("set_mediasource()")
 
-# cndctl mediasource time {sourceName}
-async def time(ws, sourceName):
-    logging.debug("get_mediasource_time({})".format(sourceName))
+# cndctl mediasource time {source_name}
+async def time(ws, source_name):
+    logging.debug("get_mediasource_time({})".format(source_name))
     while True:
-        request = simpleobsws.Request('GetMediaInputStatus', {'inputName': sourceName})
+        request = simpleobsws.Request('GetMediaInputStatus', {'inputName': source_name})
 
         ret = await ws.call(request)
         if ret.ok():

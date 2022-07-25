@@ -18,6 +18,7 @@ import argparse
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
 parser.add_argument("operator")
+parser.add_argument("--secret")
 parser.add_argument("--obs-host")
 parser.add_argument("--obs-port")
 parser.add_argument("--obs-password")
@@ -27,47 +28,50 @@ parser.add_argument("--secret")
 
 args = parser.parse_args()
 
+obsHost = ""
+obsPort = ""
+obsPass = ""
 # envirouments
 if "WSHOST" in os.environ:
-    HOST = os.environ["WSHOST"]
+    obsHost= os.environ["WSHOST"]
 if "WSPORT" in os.environ:
-    PORT = os.environ["WSPORT"]
+    obsPort= os.environ["WSPORT"]
 if "WSPASS" in os.environ:
-    PASS = os.environ["WSPASS"]
+    obsPass= os.environ["WSPASS"]
 
 # json
-secretFilePath = args.secret
-with open(secretFilePath) as f:
-    secret = json.loads(f.read())
 
-if "obs" in secret:
-    obs = secret['obs']
-    logging.debug(obs)
+if args.secret:
+    with open(args.secret) as f:
+        secret = json.loads(f.read())
 
-    if secret['obs']['host']:
-        HOST = secret['obs']['host']
-    if secret['obs']['port']:
-        PORT = secret['obs']['port']
-    if secret['obs']['password']:
-        PASS = secret['obs']['password']
+    if "obs" in secret:
+        obs = secret['obs']
+        logging.debug(obs)
+
+        if "host" in secret['obs'] and secret['obs']['host']:
+            obsHost= secret['obs']['host']
+        if "port" in secret['obs'] and secret['obs']['port']:
+            obsPort= secret['obs']['port']
+        if "password" in secret['obs'] and secret['obs']['password']:
+            obsPass= secret['obs']['password']
 
 if "dreamkast" in secret:
     dreamkast = secret['dreamkast']
     print(dreamkast)
 
-# command option 
-
+# command option
 if args.obs_host:
-    HOST = args.obs_host
+    obsHost= args.obs_host
 if args.obs_port:
-    PORT = args.obs_port
+    obsPort= args.obs_port
 if args.obs_password:
-    PASS = args.obs_password
+    obsPass= args.obs_password
 
-logging.info("{}:{}({})".format(HOST, PORT, PASS))
+logging.info("{}:{}({})".format(obsHost, obsPort, obsPass))
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = f'ws://{HOST}:{PORT}', password = PASS, identification_parameters = parameters)
+ws = simpleobsws.WebSocketClient(url = f'ws://{obsHost}:{obsPort}', password = obsPass, identification_parameters = parameters)
 
 async def init():
     await ws.connect()
@@ -83,7 +87,7 @@ def main():
             loop.run_until_complete(scene.get(ws=ws))
         elif args.operator == "change":
             if not args.sceneName:
-                logging.error("not found argment: --sceneName")
+                logging.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(ws=ws, sceneName=args.sceneName))
         elif args.operator == "next":
@@ -98,7 +102,7 @@ def main():
     elif args.object == "source":
         if args.operator == "get":
             if not args.sceneName:
-                logging.error("not found argment: --sceneName")
+                logging.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(ws=ws, sceneName=args.sceneName))
 
@@ -108,7 +112,7 @@ def main():
             loop.run_until_complete(mediasource.get(ws=ws))
         elif args.operator == "time":
             if not args.sourceName:
-                logging.error("not found argment: --sourceName")
+                logging.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(ws=ws, sourceName=args.sourceName))
 

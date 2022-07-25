@@ -1,3 +1,4 @@
+from email import header
 import logging
 import os
 import sys
@@ -63,7 +64,19 @@ def update(DK_AUTH0_URL, DK_CLIENT_ID, DK_CLIENT_SECRETS):
 def talks():
     logging.debug("dreamkast_update()")
 
-    # res = requests.put 
-
-def onair():
+def onair(DK_URL, DK_TALK_ID):
     logging.debug("dreamkast_onair()")
+
+    if check_dk_env(env_file_path=".dk.env"):
+        token = read_token(env_file_path=".dk.env")
+        req_url = "https://" + DK_URL + "/api/v1/talks/{}".format(DK_TALK_ID)
+        headers = {
+            'Authorization': 'Bearer {}'.format(token)
+        }
+        data = {
+            "on_air": True
+        }
+        logging.debug("request\nurl   : {}\nheader: {}\ndata  : {}".format(req_url, headers, data))
+        res = requests.put(req_url, headers=headers, data=json.dumps(data))
+        res_payload = res.json()
+        print(res_payload)

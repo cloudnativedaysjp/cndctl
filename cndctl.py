@@ -8,7 +8,7 @@ import text
 import dreamkast
 
 import logging
-logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 import asyncio
 import simpleobsws
 import sys
@@ -27,8 +27,9 @@ parser.add_argument("--dk-url")
 parser.add_argument("--dk-auth0-url")
 parser.add_argument("--dk-client-id")
 parser.add_argument("--dk-client-secrets")
+parser.add_argument("--dk-talk-id")
 parser.add_argument("--sceneName")
-parser.add_argument("--sourceName")
+parser.add_argument("--source_name")
 
 args = parser.parse_args()
 
@@ -39,6 +40,7 @@ DK_URL = ""
 DK_AUTH0_URL = ""
 DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
+DK_TALK_ID = ""
 
 # envirouments
 if "WSHOST" in os.environ:
@@ -96,11 +98,13 @@ if args.dk_client_id:
     DK_CLIENT_ID = args.dk_client_id
 if args.dk_client_secrets:
     DK_CLIENT_SECRETS = args.dk_client_secrets
+if args.dk_talk_id:
+    DK_TALK_ID = args.dk_talk_id
 
-logging.info("{}:{}({})".format(obsHost, obsPort, obsPass))
+logging.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = f'ws://{obsHost}:{obsPort}', password = obsPass, identification_parameters = parameters)
+ws = simpleobsws.WebSocketClient(url = f'ws://{OBS_HOST}:{OBS_PORT}', password = OBS_PASS, identification_parameters = parameters)
 
 async def obsinit():
     await ws.connect()
@@ -120,6 +124,12 @@ def main():
                 print("No enough options: --dk-client-secrets")
                 sys.exit()
             dreamkast.update(DK_AUTH0_URL=DK_AUTH0_URL, DK_CLIENT_ID=DK_CLIENT_ID, DK_CLIENT_SECRETS=DK_CLIENT_SECRETS)
+        elif args.operator == "onair":
+            if not DK_TALK_ID:
+                print("No enough options: --dk-talk-id")
+                sys.exit()
+            dreamkast.onair(DK_URL=DK_URL, DK_TALK_ID=DK_TALK_ID)
+
         sys.exit()
 
     loop = asyncio.get_event_loop()

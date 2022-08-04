@@ -1,0 +1,13 @@
+{
+    "obs": {
+        "host": "192.168.50.254",
+        "port": 4444,
+        "password": "password"
+    },
+    "dreamkast": {
+        "url": "event.cloudnativedays.jp",
+        "auth0_url": "yourorg.us.auth0.com",
+        "client_id": "your_client_id",
+        "client_secrets": "your_client_secrets"
+    }
+}

@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger(__name__)
 import asyncio
 import simpleobsws
 import os
@@ -10,71 +11,71 @@ async def get(ws):
 
     ret = await ws.call(request)
     if not ret.ok():
-        logging.error("Request error. Request:{} Response:{}".format(request, ret))
+        logger.error("Request error. Request:{} Response:{}".format(request, ret))
         sys.exit()
     scenes = ret.responseData['scenes']
-    logging.info(ret)
+    logger.info(ret)
 
     for scene in reversed(scenes):
-        logging.info("scene[{}]: {}".format(scene['sceneIndex'], scene['sceneName']))
+        logger.info("scene[{}]: {}".format(scene['sceneIndex'], scene['sceneName']))
         print(scene['sceneName'])
 
 
 # cndctl scene next
 async def next(ws):
-    logging.debug("set_next()")
+    logger.debug("set_next()")
 
     request = simpleobsws.Request('GetSceneList')
 
     ret = await ws.call(request)
     if not ret.ok():
-        logging.error("Request error. Request:{} Response:{}".format(request, ret))
+        logger.error("Request error. Request:{} Response:{}".format(request, ret))
         sys.exit()
     scenes = ret.responseData['scenes']
-    logging.info(scenes)
+    logger.info(scenes)
 
     currentProgramSceneIndex =  [scene['sceneIndex'] for scene in scenes if scene['sceneName'] == ret.responseData['currentProgramSceneName']][0]
     currentProgramSceneName = ret.responseData['currentProgramSceneName']
     print(currentProgramSceneName)
-    logging.info("current: [{}]{}".format(currentProgramSceneIndex, currentProgramSceneName))
+    logger.info("current: [{}]{}".format(currentProgramSceneIndex, currentProgramSceneName))
 
     nextSceneIndex = currentProgramSceneIndex - 1
     if nextSceneIndex < 0:
-        logging.info("current scene is tha last scene.")
+        logger.info("current scene is tha last scene.")
     else:
-        logging.info("nextScene: [{}]{}".format(nextSceneIndex, scenes[nextSceneIndex]))
+        logger.info("nextScene: [{}]{}".format(nextSceneIndex, scenes[nextSceneIndex]))
 
     request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': scenes[nextSceneIndex]['sceneName']})
 
     ret = await ws.call(request)
     if not ret.ok():
-        logging.error("Request error. \n  Request:{} \n  Response:{}".format(request, ret))
+        logger.error("Request error. \n  Request:{} \n  Response:{}".format(request, ret))
         sys.exit()
     
-    # logging.info("scene changed: {}".format(sceneName))
+    # logger.info("scene changed: {}".format(sceneName))
 
 
 # cndctl scene set {sceneName}
 async def change(ws, sceneName):
-    logging.debug("set_scene({})".format(sceneName))
+    logger.debug("set_scene({})".format(sceneName))
 
     request = simpleobsws.Request('GetSceneList')
 
     ret = await ws.call(request)
     if not ret.ok():
-        logging.error("Request error. Request:{} Response:{}".format(request, ret))
+        logger.error("Request error. Request:{} Response:{}".format(request, ret))
         sys.exit()
     scenes = ret.responseData['scenes']
     
     if not [True for scene in scenes if scene['sceneName'] == sceneName]:
-        logging.info("Not found scene: {}".format(sceneName))
+        logger.info("Not found scene: {}".format(sceneName))
         sys.exit()
 
     request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': sceneName})
 
     ret = await ws.call(request)
     if not ret.ok():
-        logging.error("Request error. \n  Request:{} \n  Response:{}".format(request, ret))
+        logger.error("Request error. \n  Request:{} \n  Response:{}".format(request, ret))
         sys.exit()
     
-    logging.info("scene changed: {}".format(sceneName))
+    logger.info("scene changed: {}".format(sceneName))

@@ -1,5 +1,6 @@
 from email import header
 import logging
+logger = logging.getLogger(__name__)
 import os
 import sys
 import json
@@ -33,7 +34,7 @@ def check_dk_env(env_file_path):
 
 # cndctl dk update
 def update(DK_AUTH0_URL, DK_CLIENT_ID, DK_CLIENT_SECRETS):
-    logging.debug("dreamkast_update()")
+    logger.debug("dreamkast_update()")
     env_file_path = ".dk.env"
 
     if check_dk_env(env_file_path=env_file_path):
@@ -62,10 +63,10 @@ def update(DK_AUTH0_URL, DK_CLIENT_ID, DK_CLIENT_SECRETS):
     token_file.close()
 
 def talks():
-    logging.debug("dreamkast_update()")
+    logger.debug("dreamkast_update()")
 
 def onair(DK_URL, DK_TALK_ID):
-    logging.debug("dreamkast_onair()")
+    logger.debug("dreamkast_onair()")
 
     if check_dk_env(env_file_path=".dk.env"):
         token = read_token(env_file_path=".dk.env")
@@ -76,7 +77,7 @@ def onair(DK_URL, DK_TALK_ID):
         data = {
             "on_air": True
         }
-        logging.debug("request\nurl   : {}\nheader: {}\ndata  : {}".format(req_url, headers, data))
+        logger.debug("request\nurl   : {}\nheader: {}\ndata  : {}".format(req_url, headers, data))
         res = requests.put(req_url, headers=headers, data=json.dumps(data))
         res_payload = res.json()
         print(res_payload)

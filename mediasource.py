@@ -1,4 +1,5 @@
 import logging
+logger = logging.getLogger(__name__)
 import asyncio
 import simpleobsws
 import os
@@ -8,11 +9,11 @@ import datetime
 import time
 
 async def get(ws):
-    logging.debug("set_mediasource()")
+    logger.debug("set_mediasource()")
 
 # cndctl mediasource time {source_name}
 async def time(ws, source_name):
-    logging.debug("get_mediasource_time({})".format(source_name))
+    logger.debug("get_mediasource_time({})".format(source_name))
     while True:
         request = simpleobsws.Request('GetMediaInputStatus', {'inputName': source_name})
 
@@ -27,4 +28,4 @@ async def time(ws, source_name):
 
 # cndctl mediasource get
 async def get(ws):
-    logging.debug("get_mediasource")
+    logger.debug("get_mediasource")

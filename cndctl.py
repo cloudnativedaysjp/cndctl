@@ -1,20 +1,23 @@
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
+
+import dreamkast
+import mediasource
+import recording
 import scene
 import scenecollection
 import source
-import mediasource
 import streaming
-import recording
 import text
-import dreamkast
 
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
-import asyncio
-import simpleobsws
-import sys
-import os
-import json
 import argparse
+import asyncio
+import json
+import os
+import sys
+
+import simpleobsws
 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
@@ -24,33 +27,39 @@ parser.add_argument("--obs-host")
 parser.add_argument("--obs-port")
 parser.add_argument("--obs-password")
 parser.add_argument("--dk-url")
+parser.add_argument("--dk-auth0-url")
 parser.add_argument("--dk-client-id")
 parser.add_argument("--dk-client-secrets")
+parser.add_argument("--dk-talk-id")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
 
 args = parser.parse_args()
 
-obsHost = ""
-obsPort = ""
-obsPass = ""
-dkUrl = ""
-dkClientId = ""
-dkClientSecrets = ""
+OBS_HOST = ""
+OBS_PORT = ""
+OBS_PASS = ""
+DK_URL = ""
+DK_CLIENT_ID = ""
+DK_CLIENT_SECRETS = ""
+DK_AUTH0_URL = ""
+DK_TALK_ID = ""
 
 # envirouments
 if "WSHOST" in os.environ:
-    obsHost= os.environ["WSHOST"]
+    OBS_HOST= os.environ["WSHOST"]
 if "WSPORT" in os.environ:
-    obsPort= os.environ["WSPORT"]
+    OBS_PORT= os.environ["WSPORT"]
 if "WSPASS" in os.environ:
-    obsPass= os.environ["WSPASS"]
+    OBS_PASS= os.environ["WSPASS"]
 if "DK_URL" in os.environ:
-    dkUrl = os.environ["DK_URL"]
+    DK_URL = os.environ["DK_URL"]
+if "DK_AUTH0_URL" in os.environ:
+    DK_URL = os.environ["DK_AUTH0_URL"]
 if "DK_CLIENT_ID" in os.environ:
-    dkClientId = os.environ["DK_CLIENT_ID"]
+    DK_CLIENT_ID = os.environ["DK_CLIENT_ID"]
 if "DK_CLIENT_SECRET" in os.environ:
-    dkClientSecrets = os.environ["DK_CLIENT_SECRET"]
+    DK_CLIENT_SECRETS = os.environ["DK_CLIENT_SECRET"]
 
 # json
 
@@ -60,41 +69,47 @@ if args.secret:
 
     if "obs" in secret:
         obs = secret['obs']
-        logging.debug(obs)
+        logger.debug(obs)
 
         if "host" in secret['obs'] and secret['obs']['host']:
-            obsHost= secret['obs']['host']
+            OBS_HOST= secret['obs']['host']
         if "port" in secret['obs'] and secret['obs']['port']:
-            obsPort= secret['obs']['port']
+            OBS_PORT= secret['obs']['port']
         if "password" in secret['obs'] and secret['obs']['password']:
-            obsPass= secret['obs']['password']
+            OBS_PASS= secret['obs']['password']
 
     if "dreamkast" in secret:
         if "url" in secret['dreamkast'] and secret['dreamkast']['url']:
-            dkUrl = secret['dreamkast']['url']
+            DK_URL = secret['dreamkast']['url']
+        if "auth0_url" in secret['dreamkast'] and secret['dreamkast']['auth0_url']:
+            DK_AUTH0_URL = secret['dreamkast']['auth0_url']
         if "client_id" in secret['dreamkast'] and secret['dreamkast']['client_id']:
-            dkClientId = secret['dreamkast']['client_id']
+            DK_CLIENT_ID = secret['dreamkast']['client_id']
         if "client_secrets" in secret['dreamkast'] and secret['dreamkast']['client_secrets']:
-            dkClientSecrets = secret['dreamkast']['client_secrets']
+            DK_CLIENT_SECRETS = secret['dreamkast']['client_secrets']
 
 # command option
 if args.obs_host:
-    obsHost= args.obs_host
+    OBS_HOST= args.obs_host
 if args.obs_port:
-    obsPort= args.obs_port
+    OBS_PORT= args.obs_port
 if args.obs_password:
-    obsPass= args.obs_password
+    OBS_PASS= args.obs_password
 if args.dk_url:
-    dkUrl = args.dk_url
+    DK_URL = args.dk_url
+if args.dk_auth0_url:
+    DK_AUTH0_URL = args.dk_auth0_url
 if args.dk_client_id:
-    dkClientId = args.dk_client_id
+    DK_CLIENT_ID = args.dk_client_id
 if args.dk_client_secrets:
-    dkClientSecrets = args.dk_client_secrets
+    DK_CLIENT_SECRETS = args.dk_client_secrets
+if args.dk_talk_id:
+    DK_TALK_ID = args.dk_talk_id
 
-logging.info("{}:{}({})".format(obsHost, obsPort, obsPass))
+logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
 parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = f'ws://{obsHost}:{obsPort}', password = obsPass, identification_parameters = parameters)
+ws = simpleobsws.WebSocketClient(url = f'ws://{OBS_HOST}:{OBS_PORT}', password = OBS_PASS, identification_parameters = parameters)
 
 async def obsinit():
     await ws.connect()
@@ -131,7 +146,7 @@ def main():
             loop.run_until_complete(scene.get(ws=ws))
         elif args.operator == "change":
             if not args.sceneName:
-                logging.error("No enough options: --sceneName")
+                logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(ws=ws, sceneName=args.sceneName))
         elif args.operator == "next":
@@ -146,7 +161,7 @@ def main():
     elif args.object == "source":
         if args.operator == "get":
             if not args.sceneName:
-                logging.error("No enough options: --sceneName")
+                logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(ws=ws, sceneName=args.sceneName))
 
@@ -156,9 +171,9 @@ def main():
             loop.run_until_complete(mediasource.get(ws=ws))
         elif args.operator == "time":
             if not args.sourceName:
-                logging.error("No enough options: --sourceName")
+                logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws=ws, source_name=args.source_name))
+            loop.run_until_complete(mediasource.time(ws=ws, source_name=args.sourceName))
 
     # streaming
     elif args.object == "streaming":

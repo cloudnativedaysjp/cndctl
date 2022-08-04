@@ -3,3 +3,4 @@
 /__pycache__
 *.spec
 .dk.env
+secrets.json

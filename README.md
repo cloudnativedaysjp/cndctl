@@ -40,7 +40,7 @@
 コマンドオプションのパラメータはもっとも優先されて読み込まれます。
 利用可能なオプションは以下のとおりです。
 
-- `--secret`: 
+- `--secret`: 認証用のJSONファイルを指定する
 - `--obs-host`: OBS Websocketの接続先（IPアドレスまたはドメイン名）
 - `--obs-port`: OBS Websocketの待ち受けポート
 - `--obs-password`: OBS Websocketの待ち受けパスワード
@@ -61,6 +61,9 @@
 
 #### 指定したシーンに切り替え
 `cndctl scene change --sceneName={SCENE_NAME}`
+
+##### fzfを利用した切り替え
+`./cndctl --secret switcher01.json scene change --sceneName="$(cndctl --secret switcher01.json scene get | fzf)"`
 
 ### メディアソース関連の操作
 #### メディアソースの残り時間を取得

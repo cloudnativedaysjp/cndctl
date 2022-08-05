@@ -4,6 +4,7 @@ import asyncio
 import simpleobsws
 import os
 import sys
+import cli
 
 # cndctl scene get
 async def get(ws):
@@ -45,6 +46,9 @@ async def next(ws):
     else:
         logger.info("nextScene: [{}]{}".format(nextSceneIndex, scenes[nextSceneIndex]))
 
+    if not cli.accept_continue("Change scene to '{}'".format(scenes[nextSceneIndex]['sceneName'])):
+        sys.exit()
+
     request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': scenes[nextSceneIndex]['sceneName']})
 
     ret = await ws.call(request)
@@ -69,6 +73,9 @@ async def change(ws, sceneName):
     
     if not [True for scene in scenes if scene['sceneName'] == sceneName]:
         logger.info("Not found scene: {}".format(sceneName))
+        sys.exit()
+
+    if not cli.accept_continue("Change scene to '{}'".format(sceneName)):
         sys.exit()
 
     request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': sceneName})

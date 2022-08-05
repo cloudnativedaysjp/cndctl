@@ -8,6 +8,7 @@ import requests
 import base64
 import datetime
 import jwt
+import cli
 
 def read_token(env_file_path):
     token_file = open(env_file_path, "r")
@@ -21,6 +22,10 @@ def check_dk_env(env_file_path):
         token = read_token(env_file_path=env_file_path)
     else:
         print("The '{}' not found. Please, generate token using 'cndctl dk update'".format(env_file_path))
+        return False
+    
+    if not token:
+        print("token '{}' is empty".format(env_file_path))
         return False
     
     token_payload = jwt.decode(token, options={"verify_signature": False})
@@ -39,6 +44,9 @@ def update(DK_AUTH0_URL, DK_CLIENT_ID, DK_CLIENT_SECRETS):
 
     if check_dk_env(env_file_path=env_file_path):
         print("token not expired")
+        sys.exit()
+
+    if not cli.accept_continue("Dk token update ok?"):
         sys.exit()
 
     req_url = "https://" + DK_AUTH0_URL + "/oauth/token"

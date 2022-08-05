@@ -9,7 +9,6 @@ import scene
 import scenecollection
 import source
 import streaming
-import text
 
 import argparse
 import asyncio

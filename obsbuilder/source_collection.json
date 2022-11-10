@@ -1,0 +1,48 @@
+[
+    {
+        "name": "vidoe_standard",
+        "config": {
+            "playlist": [
+                {
+                    "file_path": ""
+                },
+                {
+                    "file_path": ""
+                }
+            ],
+            "loop": false,
+            "display_control": "always"
+        }
+    },
+    {
+        "name": "offline_standard",
+        "config": {
+            "is_play_active": false,
+            "network_buffering": 2,
+            "input_url": "rtmp://nginx01.cloudnativedays.jp:10002/live/aaa",
+            "input_format": "rtmp",
+            "reconnect_delay": 10,
+            "use_hardware_decord": true
+        }
+    },
+    {
+        "name": "online_standard",
+        "config": {
+            "is_local_file": false,
+            "restart_on_activate": false,
+            "buffering_mb": 2,
+            "input": "rtmp://nginx01.cloudnativedays.jp:10002/live/aaa"
+        }
+    },
+    {
+        "name": "simul_standard",
+        "config": {
+            "is_play_active": false,
+            "network_buffering": 2,
+            "input_url": "rtmp://nginx01.cloudnativedays.jp:10002/live/aaa",
+            "input_format": "rtmp",
+            "reconnect_delay": 10,
+            "use_hardware_decord": true
+        }
+    }
+]

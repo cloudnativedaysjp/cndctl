@@ -1,0 +1,20 @@
+{
+    "config": {
+        "switchers": [
+            {
+                "host": "switcher01.cloudnativedays.jp",
+                "port": 4444,
+                "password": "password"
+            },
+            {
+                "host": "switcher02.cloudnativedays.jp",
+                "port": 4444,
+                "password": "password"
+            }
+        ],
+        "dreamkast": {
+            "host": "event.cloudnativedays.jp"
+        }
+    },
+    
+}

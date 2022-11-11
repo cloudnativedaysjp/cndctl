@@ -1,8 +1,6 @@
 import asyncio
-import datetime
 import logging
 import simpleobsws
-import pprint
 import json
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')

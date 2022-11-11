@@ -2,13 +2,13 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
 
-import dreamkast
-import mediasource
-import recording
-import scene
-import scenecollection
-import source
-import streaming
+from . import dreamkast
+from . import MediaSource
+from . import recording
+from . import Scene
+from . import scenecollection
+from . import source
+from . import streaming
 
 import argparse
 import asyncio
@@ -114,7 +114,9 @@ async def obsinit():
     await ws.connect()
     await ws.wait_until_identified()
 
-def main():
+def run():
+    
+    dk = dreamkast.dreamkast()
 
     if args.object == "dk":
         if args.operator == "update":
@@ -127,34 +129,37 @@ def main():
             if not DK_CLIENT_SECRETS:
                 print("No enough options: --dk-client-secrets")
                 sys.exit()
-            dreamkast.update(DK_AUTH0_URL=DK_AUTH0_URL, DK_CLIENT_ID=DK_CLIENT_ID, DK_CLIENT_SECRETS=DK_CLIENT_SECRETS)
+            dk.update(DK_AUTH0_URL=DK_AUTH0_URL, DK_CLIENT_ID=DK_CLIENT_ID, DK_CLIENT_SECRETS=DK_CLIENT_SECRETS)
         elif args.operator == "onair":
             if not DK_TALK_ID:
                 print("No enough options: --dk-talk-id")
                 sys.exit()
-            dreamkast.onair(DK_URL=DK_URL, DK_TALK_ID=DK_TALK_ID)
+            dk.onair(DK_URL=DK_URL, DK_TALK_ID=DK_TALK_ID)
 
         sys.exit()
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(obsinit())
+    
+    mediasource = MediaSource.MediaSource()
+    scene = Scene.Scene()
 
     # scene
     if args.object == "scene":
         if args.operator == "get":
-            loop.run_until_complete(scene.get(ws=ws))
+            loop.run_until_complete(scene.get(ws))
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
-            loop.run_until_complete(scene.change(ws=ws, sceneName=args.sceneName))
+            loop.run_until_complete(scene.change(ws, args.sceneName))
         elif args.operator == "next":
-            loop.run_until_complete(scene.next(ws=ws))
+            loop.run_until_complete(scene.next(ws))
 
     # scenecollection
     elif args.object == "scenecollection":
         if args.operator == "get":
-            loop.run_until_complete(scenecollection.get(ws=ws))
+            loop.run_until_complete(scenecollection.get(ws))
 
     # source
     elif args.object == "source":
@@ -162,33 +167,31 @@ def main():
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
-            loop.run_until_complete(source.get(ws=ws, sceneName=args.sceneName))
+            loop.run_until_complete(source.get(ws, args.sceneName))
 
     # mediasource
     elif args.object == "mediasource":
         if args.operator == "get":
-            loop.run_until_complete(mediasource.get(ws=ws))
+            loop.run_until_complete(ms.get(ws))
         elif args.operator == "time":
             if not args.sourceName:
                 logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws=ws, source_name=args.sourceName))
+            loop.run_until_complete(ms.time(ws, args.sourceName))
 
     # streaming
     elif args.object == "streaming":
         if args.operator == "start":
-            loop.run_until_complete(streaming.start(ws=ws))
+            loop.run_until_complete(streaming.start(ws))
         elif args.operator == "stop":
-            loop.run_until_complete(streaming.stop(ws=ws))
+            loop.run_until_complete(streaming.stop(ws))
 
     # recording
     elif args.object == "recording":
         if args.operator == "start":
-            loop.run_until_complete(recording.start(ws=ws))
+            loop.run_until_complete(recording.start(ws))
         elif args.operator == "stop":
-            loop.run_until_complete(recording.stop(ws=ws))
+            loop.run_until_complete(recording.stop(ws))
+
     else:
         print("undefined command: {}".format(args))
-
-if __name__ == "__main__":
-    main()

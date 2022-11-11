@@ -2,13 +2,10 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
 
-from . import dreamkast
-from . import MediaSource
-from . import recording
-from . import Scene
-from . import scenecollection
-from . import source
-from . import streaming
+from .Dreamkast import Dreamkast
+from .MediaSource import MediaSource
+from .Scene import Scene
+from .Source import Source
 
 import argparse
 import asyncio
@@ -43,6 +40,7 @@ DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
 DK_AUTH0_URL = ""
 DK_TALK_ID = ""
+EVENT_ABBR = "cndt2022"
 
 # envirouments
 if "WSHOST" in os.environ:
@@ -116,7 +114,13 @@ async def obsinit():
 
 def run():
     
-    dk = dreamkast.dreamkast()
+    dreamkast = Dreamkast(
+        DK_URL,
+        DK_AUTH0_URL,
+        DK_CLIENT_ID,
+        DK_CLIENT_SECRETS,
+        EVENT_ABBR
+    )
 
     if args.object == "dk":
         if args.operator == "update":
@@ -129,20 +133,21 @@ def run():
             if not DK_CLIENT_SECRETS:
                 print("No enough options: --dk-client-secrets")
                 sys.exit()
-            dk.update(DK_AUTH0_URL=DK_AUTH0_URL, DK_CLIENT_ID=DK_CLIENT_ID, DK_CLIENT_SECRETS=DK_CLIENT_SECRETS)
+            dreamkast.update()
         elif args.operator == "onair":
             if not DK_TALK_ID:
                 print("No enough options: --dk-talk-id")
                 sys.exit()
-            dk.onair(DK_URL=DK_URL, DK_TALK_ID=DK_TALK_ID)
+            dreamkast.onair()
 
         sys.exit()
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(obsinit())
     
-    mediasource = MediaSource.MediaSource()
-    scene = Scene.Scene()
+    mediasource = MediaSource()
+    scene = Scene()
+    source = Source()
 
     # scene
     if args.object == "scene":
@@ -172,26 +177,12 @@ def run():
     # mediasource
     elif args.object == "mediasource":
         if args.operator == "get":
-            loop.run_until_complete(ms.get(ws))
+            loop.run_until_complete(mediasource.get(ws))
         elif args.operator == "time":
             if not args.sourceName:
                 logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(ms.time(ws, args.sourceName))
-
-    # streaming
-    elif args.object == "streaming":
-        if args.operator == "start":
-            loop.run_until_complete(streaming.start(ws))
-        elif args.operator == "stop":
-            loop.run_until_complete(streaming.stop(ws))
-
-    # recording
-    elif args.object == "recording":
-        if args.operator == "start":
-            loop.run_until_complete(recording.start(ws))
-        elif args.operator == "stop":
-            loop.run_until_complete(recording.stop(ws))
+            loop.run_until_complete(mediasource.time(ws, args.sourceName))
 
     else:
         print("undefined command: {}".format(args))

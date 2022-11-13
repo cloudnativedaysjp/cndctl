@@ -6,6 +6,7 @@ from .Dreamkast import Dreamkast
 from .MediaSource import MediaSource
 from .Scene import Scene
 from .Source import Source
+from .Switcher import Switcher
 
 import argparse
 import asyncio
@@ -27,6 +28,7 @@ parser.add_argument("--dk-auth0-url")
 parser.add_argument("--dk-client-id")
 parser.add_argument("--dk-client-secrets")
 parser.add_argument("--dk-talk-id")
+parser.add_argument("--event-abbr")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
 
@@ -40,7 +42,7 @@ DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
 DK_AUTH0_URL = ""
 DK_TALK_ID = ""
-EVENT_ABBR = "cndt2022"
+EVENT_ABBR = ""
 
 # envirouments
 if "WSHOST" in os.environ:
@@ -57,11 +59,13 @@ if "DK_CLIENT_ID" in os.environ:
     DK_CLIENT_ID = os.environ["DK_CLIENT_ID"]
 if "DK_CLIENT_SECRET" in os.environ:
     DK_CLIENT_SECRETS = os.environ["DK_CLIENT_SECRET"]
+if "EVENT_ABBR" in os.environ:
+    DK_CLIENT_SECRETS = os.environ["EVENT_ABBR"]
 
 # json
 
 if args.secret:
-    with open(args.secret) as f:
+    with open(args.secret, encoding="utf-8") as f:
         secret = json.loads(f.read())
 
     if "obs" in secret:
@@ -84,6 +88,8 @@ if args.secret:
             DK_CLIENT_ID = secret['dreamkast']['client_id']
         if "client_secrets" in secret['dreamkast'] and secret['dreamkast']['client_secrets']:
             DK_CLIENT_SECRETS = secret['dreamkast']['client_secrets']
+        if "event_abbr" in secret['dreamkast'] and secret['dreamkast']['event_abbr']:
+            EVENT_ABBR = secret['dreamkast']['event_abbr']
 
 # command option
 if args.obs_host:
@@ -102,6 +108,8 @@ if args.dk_client_secrets:
     DK_CLIENT_SECRETS = args.dk_client_secrets
 if args.dk_talk_id:
     DK_TALK_ID = args.dk_talk_id
+if args.event_abbr:
+    EVENT_ABBR = args.event_abbr
 
 logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
@@ -138,51 +146,55 @@ def run():
             if not DK_TALK_ID:
                 print("No enough options: --dk-talk-id")
                 sys.exit()
-            dreamkast.onair()
+            dreamkast.onair(DK_TALK_ID)
 
         sys.exit()
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(obsinit())
     
+    NEXTCLOUD_BASE_PATH = "/home/ubuntu/Nextcloud/Broadcast/CNDT2022"
+    UPLOADER_BASE_PATH = "/home/ubuntu/Nextcloud2/cndt2022"
+    
     mediasource = MediaSource()
     scene = Scene()
     source = Source()
-
+    switcher = Switcher(
+        NEXTCLOUD_BASE_PATH,
+        UPLOADER_BASE_PATH
+    )
+    
     # scene
     if args.object == "scene":
         if args.operator == "get":
-            loop.run_until_complete(scene.get(ws))
+            loop.run_until_complete(scene.get())
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
-            loop.run_until_complete(scene.change(ws, args.sceneName))
+            loop.run_until_complete(scene.change(args.sceneName))
         elif args.operator == "next":
-            loop.run_until_complete(scene.next(ws))
-
-    # scenecollection
-    elif args.object == "scenecollection":
-        if args.operator == "get":
-            loop.run_until_complete(scenecollection.get(ws))
-
+            loop.run_until_complete(scene.next())
     # source
     elif args.object == "source":
         if args.operator == "get":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
-            loop.run_until_complete(source.get(ws, args.sceneName))
+            loop.run_until_complete(source.get(args.sceneName))
 
     # mediasource
     elif args.object == "mediasource":
         if args.operator == "get":
-            loop.run_until_complete(mediasource.get(ws))
+            loop.run_until_complete(mediasource.get())
         elif args.operator == "time":
             if not args.sourceName:
                 logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws, args.sourceName))
+            loop.run_until_complete(mediasource.time(args.sourceName))
+    elif args.object == "switcher":
+        if args.operator == "build":
+            loop.run_until_complete(switcher.build(dreamkast, ws))
 
     else:
-        print("undefined command: {}".format(args))
+        print(f"undefined command: {args}")

@@ -9,19 +9,20 @@ import base64
 import datetime
 import jwt
 
-from . import cli
+from .cli import Cli
 
 class Dreamkast:
     
-    def __init__(self, DK_URL, AUTH0_URL, CLIENT_ID, CLIENT_SECRETS, EVENT_ABBR) -> None:
-        self.dk_url = DK_URL
-        self.auth0_url = AUTH0_URL
-        self.client_id = CLIENT_ID
-        self.client_secrets = CLIENT_SECRETS
-        self.event_abbr = EVENT_ABBR
+    def __init__(self, dk_url, auth0_url, client_id, client_secrets, event_abbr) -> None:
+        self.dk_url = dk_url
+        self.auth0_url = auth0_url
+        self.client_id = client_id
+        self.client_secrets = client_secrets
+        self.event_abbr = event_abbr
+        
 
     def __read_token(self, env_file_path):
-        token_file = open(env_file_path, "r")
+        token_file = open(env_file_path, "r", encoding="utf-8")
         token = token_file.read()
         token_file.close()
 
@@ -31,11 +32,11 @@ class Dreamkast:
         if os.path.isfile(env_file_path):
             token = self.__read_token(env_file_path=env_file_path)
         else:
-            print("The '{}' not found. Please, generate token using 'cndctl dk update'".format(env_file_path))
+            print(f"The '{env_file_path}' not found. Please, generate token using 'cndctl dk update'")
             return False
         
         if not token:
-            print("token '{}' is empty".format(env_file_path))
+            print(f"token '{env_file_path}' is empty")
             return False
         
         token_payload = jwt.decode(token, options={"verify_signature": False})
@@ -51,12 +52,14 @@ class Dreamkast:
     def update(self):
         logger.debug("dreamkast_update()")
         env_file_path = ".dk.env"
+        cli = Cli()
 
         if self.__check_dk_env(env_file_path=env_file_path):
             print("token not expired")
             sys.exit()
 
-        if not cli.accept_continue("Dk token update ok?"):
+        msg = "Dk token update ok?"
+        if not cli.accept_continue(msg):
             sys.exit()
 
         req_url = "https://" + self.auth0_url + "/oauth/token"
@@ -71,12 +74,12 @@ class Dreamkast:
         }
         data['client_id'] = self.client_id
         data['client_secret'] = self.client_secrets
-
+        
         res = requests.post(req_url, headers=headers, data=json.dumps(data))
         res_payload = res.json()
         print("token update successfully ({})".format(res_payload))
 
-        token_file = open(".dk.env", "w")
+        token_file = open(".dk.env", "w", encoding="utf-8")
         token_file.write(res_payload['access_token'])
         token_file.close()
 
@@ -112,7 +115,7 @@ class Dreamkast:
     def get_track_name(self, TRACK_ID):
         logger.debug("get_track_name")
         
-        tracks = self.get_track(self.dk_url, self.event_abbr)
+        tracks = self.get_track()
         for track in tracks:
             if track['id'] == TRACK_ID:
                 return track
@@ -126,6 +129,7 @@ class Dreamkast:
 
         # get event id
         i = 0
+        event_list_position = 0
         for event in res_payload:
             if event['abbr'] == self.event_abbr:
                 event_list_position = i
@@ -133,12 +137,12 @@ class Dreamkast:
         
         return res_payload[event_list_position]['conferenceDays']
 
-    def get_talks(self, CONFERENCE_DAY_ID):
+    def get_talks(self, conference_day_id):
         logger.debug("get_talks()")
         
         talks = list()
 
-        req_url = "https://" + self.dk_url + "/api/v1/talks?eventAbbr={}&conferenceDayIds={}".format(self.event_abbr, CONFERENCE_DAY_ID)
+        req_url = f"https://{self.dk_url}/api/v1/talks?eventAbbr={self.event_abbr}&conferenceDayIds={conference_day_id}"
         res = requests.get(req_url)
         res_payload = res.json()
         
@@ -148,11 +152,14 @@ class Dreamkast:
         return talks
 
     def create_talks(self):
-        conference_day_ids = self.get_conference_day_ids(self.dk_url, self.event_abbr)
-        tracks_list = self.get_track(self.dk_url, self.event_abbr)
+        if not self.__check_dk_env(".dk.env"):
+            print("token expired. please type 'cndctl dk update'")
+            sys.exit()
+        conference_day_ids = self.get_conference_day_ids()
+        tracks_list = self.get_track()
         
         talks = list()
-            
+
         for day_id in conference_day_ids:
             if day_id['internal']:
                 continue
@@ -161,7 +168,7 @@ class Dreamkast:
             for track in tracks_list:
                 insert_talks_list = list()
             
-                for talk in self.get_talks(self.dk_url, self.event_abbr, day_id['id']):
+                for talk in self.get_talks(day_id['id']):
                     if not track['id'] == talk['trackId']:
                         continue
                                     

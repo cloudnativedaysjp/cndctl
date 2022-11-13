@@ -16,14 +16,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
 
 
 class Switcher:
 
     def __init__(self, nextcloud_base_path: str,
-                 uploader_base_path: str) -> None:
+                 uploader_base_path: str, keynote_track_name: str) -> None:
         """Switcher関連の初期化
 
         Args:
@@ -35,6 +35,17 @@ class Switcher:
 
         self.nextcloud_base_path = nextcloud_base_path
         self.uploader_base_path = uploader_base_path
+        
+        track_names = [
+            "A", "B", "C", "D", "E", "F"
+        ]
+        
+        for track_name in track_names:
+            if keynote_track_name == track_name:
+                self.keynote_track_name = keynote_track_name
+        
+        if self.keynote_track_name == "":
+            logging.error(f"Keynote track name is not expected value. :{keynote_track_name}")
 
     def __generate_scene_name(self, talk: dict) -> str:
         """与えられたTalk情報からシーン名を生成します
@@ -237,6 +248,21 @@ class Switcher:
 
         self.__create_presentation_scene(scene_name, input_kind, config)
 
+    def __create_keynote_scene(self, talk: dict, nginx_configs: dict) -> None:
+        scene_name = self.__generate_scene_name(talk)
+        input_kind = "ffmpeg_source"
+        input_url = nginx_configs[self.keynote_track_name]
+
+        config = {
+            "is_local_file": False,
+            "restart_on_activate": False,
+            "buffering_mb": 2,
+            "input": input_url
+        }
+
+        self.__create_presentation_scene(scene_name, input_kind, config)
+
+
     async def build(self, dk: Dreamkast, ws: simpleobsws) -> None:
         """SwitcherのOBSにシーンコレクションを作成します
 
@@ -286,19 +312,22 @@ class Switcher:
 
                     # print(f"| |-{start_at_time}-{end_at_time}_{talk['title']}")
 
-                    if talk['presentation_method'] == "事前収録":
+                    logging.debug(f"track for: {talk}")
+
+                    if talk['abstract'] == "intermission":
+                        self.__create_rest_scene(talk)
+                    elif talk['category'] == "Keynote":
+                        self.__create_keynote_scene(talk, nginx_configs)
+                    elif talk['presentation_method'] == "事前収録":
                         self.__create_vidoe_standard(talk)
                     elif talk['presentation_method'] == "現地登壇":
                         self.__create_offline_standard(talk, nginx_configs)
                     elif talk['presentation_method'] == "オンライン登壇":
                         self.__create_online_standard(talk, nginx_configs)
                     else:
-                        print(
+                        logging.error(
                             f"undefined method: {talk['presentation_method']}, talk: {talk}"
                         )
-
-                    # if (talk['is_after_rest']):
-                    #     self.__create_rest_scene(talk)
 
                 # scenecollectionごとにリクエストする
                 # pprint.pprint(self.requests)

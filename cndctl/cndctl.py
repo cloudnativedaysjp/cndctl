@@ -165,7 +165,7 @@ def run():
     mediasource = MediaSource()
     scene = Scene()
     source = Source()
-    switcher = Switcher(NEXTCLOUD_BASE_PATH, UPLOADER_BASE_PATH)
+    switcher = Switcher(NEXTCLOUD_BASE_PATH, UPLOADER_BASE_PATH, "A")
 
     # scene
     if args.object == "scene":
@@ -195,6 +195,8 @@ def run():
                 logger.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(args.sourceName))
+
+    # switcher
     elif args.object == "switcher":
         if args.operator == "build":
             loop.run_until_complete(switcher.build(dreamkast, ws))

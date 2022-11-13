@@ -140,7 +140,7 @@ class Dreamkast:
     def get_talks(self, conference_day_id):
         logger.debug("get_talks()")
         
-        talks = list()
+        talks = []
 
         req_url = f"https://{self.dk_url}/api/v1/talks?eventAbbr={self.event_abbr}&conferenceDayIds={conference_day_id}"
         res = requests.get(req_url)
@@ -191,6 +191,8 @@ class Dreamkast:
                     insert_talk = {
                         "id": talk['id'],
                         "title": talk['title'],
+                        "abstract": talk['abstract'],
+                        "category": talk['talkCategory'],
                         "start_at": start_at.isoformat(),
                         "end_at": end_at.isoformat(),
                         "start_offset": talk['startOffset'],

@@ -1,6 +1,9 @@
 import logging
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
 
 from .Dreamkast import Dreamkast
 from .MediaSource import MediaSource
@@ -46,11 +49,11 @@ EVENT_ABBR = ""
 
 # envirouments
 if "WSHOST" in os.environ:
-    OBS_HOST= os.environ["WSHOST"]
+    OBS_HOST = os.environ["WSHOST"]
 if "WSPORT" in os.environ:
-    OBS_PORT= os.environ["WSPORT"]
+    OBS_PORT = os.environ["WSPORT"]
 if "WSPASS" in os.environ:
-    OBS_PASS= os.environ["WSPASS"]
+    OBS_PASS = os.environ["WSPASS"]
 if "DK_URL" in os.environ:
     DK_URL = os.environ["DK_URL"]
 if "DK_AUTH0_URL" in os.environ:
@@ -73,31 +76,35 @@ if args.secret:
         logger.debug(obs)
 
         if "host" in secret['obs'] and secret['obs']['host']:
-            OBS_HOST= secret['obs']['host']
+            OBS_HOST = secret['obs']['host']
         if "port" in secret['obs'] and secret['obs']['port']:
-            OBS_PORT= secret['obs']['port']
+            OBS_PORT = secret['obs']['port']
         if "password" in secret['obs'] and secret['obs']['password']:
-            OBS_PASS= secret['obs']['password']
+            OBS_PASS = secret['obs']['password']
 
     if "dreamkast" in secret:
         if "url" in secret['dreamkast'] and secret['dreamkast']['url']:
             DK_URL = secret['dreamkast']['url']
-        if "auth0_url" in secret['dreamkast'] and secret['dreamkast']['auth0_url']:
+        if "auth0_url" in secret['dreamkast'] and secret['dreamkast'][
+                'auth0_url']:
             DK_AUTH0_URL = secret['dreamkast']['auth0_url']
-        if "client_id" in secret['dreamkast'] and secret['dreamkast']['client_id']:
+        if "client_id" in secret['dreamkast'] and secret['dreamkast'][
+                'client_id']:
             DK_CLIENT_ID = secret['dreamkast']['client_id']
-        if "client_secrets" in secret['dreamkast'] and secret['dreamkast']['client_secrets']:
+        if "client_secrets" in secret['dreamkast'] and secret['dreamkast'][
+                'client_secrets']:
             DK_CLIENT_SECRETS = secret['dreamkast']['client_secrets']
-        if "event_abbr" in secret['dreamkast'] and secret['dreamkast']['event_abbr']:
+        if "event_abbr" in secret['dreamkast'] and secret['dreamkast'][
+                'event_abbr']:
             EVENT_ABBR = secret['dreamkast']['event_abbr']
 
 # command option
 if args.obs_host:
-    OBS_HOST= args.obs_host
+    OBS_HOST = args.obs_host
 if args.obs_port:
-    OBS_PORT= args.obs_port
+    OBS_PORT = args.obs_port
 if args.obs_password:
-    OBS_PASS= args.obs_password
+    OBS_PASS = args.obs_password
 if args.dk_url:
     DK_URL = args.dk_url
 if args.dk_auth0_url:
@@ -113,22 +120,21 @@ if args.event_abbr:
 
 logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
-parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks = False)
-ws = simpleobsws.WebSocketClient(url = f'ws://{OBS_HOST}:{OBS_PORT}', password = OBS_PASS, identification_parameters = parameters)
+parameters = simpleobsws.IdentificationParameters(
+    ignoreNonFatalRequestChecks=False)
+ws = simpleobsws.WebSocketClient(url=f'ws://{OBS_HOST}:{OBS_PORT}',
+                                 password=OBS_PASS,
+                                 identification_parameters=parameters)
 
 async def obsinit():
     await ws.connect()
     await ws.wait_until_identified()
 
+
 def run():
-    
-    dreamkast = Dreamkast(
-        DK_URL,
-        DK_AUTH0_URL,
-        DK_CLIENT_ID,
-        DK_CLIENT_SECRETS,
-        EVENT_ABBR
-    )
+
+    dreamkast = Dreamkast(DK_URL, DK_AUTH0_URL, DK_CLIENT_ID,
+                          DK_CLIENT_SECRETS, EVENT_ABBR)
 
     if args.object == "dk":
         if args.operator == "update":
@@ -152,18 +158,15 @@ def run():
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(obsinit())
-    
+
     NEXTCLOUD_BASE_PATH = "/home/ubuntu/Nextcloud/Broadcast/CNDT2022"
     UPLOADER_BASE_PATH = "/home/ubuntu/Nextcloud2/cndt2022"
-    
+
     mediasource = MediaSource()
     scene = Scene()
     source = Source()
-    switcher = Switcher(
-        NEXTCLOUD_BASE_PATH,
-        UPLOADER_BASE_PATH
-    )
-    
+    switcher = Switcher(NEXTCLOUD_BASE_PATH, UPLOADER_BASE_PATH)
+
     # scene
     if args.object == "scene":
         if args.operator == "get":

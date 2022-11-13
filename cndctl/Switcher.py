@@ -143,7 +143,7 @@ class Switcher:
         Args:
             talk (dict): 休憩シーンを作成する直前のプレゼンシーンを渡す
         """
-        scene_name = f"{talk['id']}_makuai"
+        scene_name = self.__generate_scene_name(talk)
         input_kind = "vlc_source"
 
         config = {
@@ -155,14 +155,14 @@ class Switcher:
                     "selected":
                     False,
                     "value":
-                    f"{self.nextcloud_base_path}/Sync/Media/broadcast-{talk['track_name']}/makuai/0.mp4"
+                    f"{self.nextcloud_base_path}/Sync/Media/broadcast-{talk['track_name']}/makuai/{talk['id']}.mp4"
                 },
                 {
                     # CM をディレクトリとして追加
                     "hidden": False,
                     "selected": False,
                     "value":
-                    "{self.nextcloud_base_path}//Sync/Media/z-common/cm"
+                    f"{self.nextcloud_base_path}//Sync/Media/z-common/cm"
                 },
             ]
         }

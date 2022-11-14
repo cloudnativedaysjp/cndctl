@@ -77,6 +77,9 @@
 #### OnAirステータスの切り替え
 `cndctl dk onair --dk-talk-id={DK_TALK_ID}`
 
+### Switcher初期化
+`cndctl switcher build`
+
 ```
 cndctl
   # シーン関連の操作

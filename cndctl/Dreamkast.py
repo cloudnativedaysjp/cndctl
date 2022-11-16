@@ -76,6 +76,7 @@ class Dreamkast:
         data['client_secret'] = self.client_secrets
         
         res = requests.post(req_url, headers=headers, data=json.dumps(data))
+        res.raise_for_status()
         res_payload = res.json()
         print("token update successfully ({})".format(res_payload))
 
@@ -85,29 +86,97 @@ class Dreamkast:
 
     def talks(self):
         logger.debug("dreamkast_update()")
+        
+    def __request_dk_api(self, api_path: str, method: str, data: dict={}, param: str = "") -> dict:
+        """DKへAPIリクエストし、レスポンスボディを返します
 
-    def onair(self, DK_TALK_ID):
-        logger.debug("dreamkast_onair()")
+        Args:
+            api_path (str): /api/v1配下のPATHを指定します（ex: /talks）
+            param (str): リクエスト時に付与するURLパラメーターを指定します（ex: ?eventAbbr=cndt2022）
+            method (str): リクエスト形式を指定します（get, put, post）
+            data (dict): データを送信する場合は、送信するデータを指定します。
 
-        if self.__check_dk_env(env_file_path=".dk.env"):
-            token = self.__read_token(env_file_path=".dk.env")
-            req_url = "https://" + self.dk_url + "/api/v1/talks/{}".format(DK_TALK_ID)
-            headers = {
-                'Authorization': 'Bearer {}'.format(token)
-            }
-            data = {
-                "on_air": True
-            }
-            logger.debug("request\nurl   : {}\nheader: {}\ndata  : {}".format(req_url, headers, data))
+        Returns:
+            dict: レスポンスボディを返します
+        """
+        if not self.__check_dk_env(env_file_path=".dk.env"):
+            logging.error(f"failed check env file. Please type 'dk update'")
+            return {}
+        
+        token = self.__read_token(env_file_path=".dk.env")
+        
+        if not param == "":
+            param = f"?{param}"
+        
+        req_url = f"https://{self.dk_url}/api/v1{api_path}{param}"
+        headers = {
+            'Authorization': 'Bearer {}'.format(token)
+        }
+        
+        logging.debug("request\nmethod: %s\nurl   : %s\nheader: %s\ndata  : %s", method, req_url, headers, data)
+        
+        if method == "get":
+            res = requests.get(req_url, headers=headers)
+        elif method == "put":
             res = requests.put(req_url, headers=headers, data=json.dumps(data))
-            res_payload = res.json()
-            print(res_payload)
+        elif method == "post":
+            res = requests.post(req_url, headers=headers, data=json.dumps(data))
+        else:
+            logging.error("undefined request method: %s", method)
+            return {}
+        
+        res.raise_for_status()
+        res_payload = res.json()
+        return res_payload
+        
+    def get_current_onair_talk(self) -> dict:
+        # get all talks
+        conference_day_ids = self.get_conference_day_ids()
+        for day_id in conference_day_ids:
+            if day_id['internal'] == True:
+                continue
+
+            talks = self.get_talks(day_id['id'])
+            return [talk for talk in talks if talk['onAir']][0]
+
+    def get_track_talks(self, track_name, conference_day_id) -> list:
+        
+        talks = self.get_talks(conference_day_id)
+        print(talks)
+        talks_for_track = [talk for talk in talks if talk['track_name'] == track_name]
+        
+        print(talks_for_track)
+
+    def cmd_track_talks(self, track_name: str) -> None:
+        pass
+
+    def onair(self, dk_talk_id):
+        cli = Cli()
+        logger.debug("dreamkast_onair()")
+        
+        current_talk = self.get_current_onair_talk()
+        next_talk = self.get_talk(dk_talk_id)
+        
+        print(f"current talk | id: {current_talk['id']} title: {current_talk['title']}")
+        print(f"next talk    | id: {next_talk['id']} title: {next_talk['title']}")
+        
+        msg = f"Change onair to '{dk_talk_id}'"
+        if not cli.accept_continue(msg):
+            sys.exit()
+        
+        path = f"/talks/{dk_talk_id}"
+        data = {
+            "on_air": True
+        }
+        
+        print(self.__request_dk_api(path, "put", data)['message'])
 
     def get_track(self):
         logger.debug("get_track_name()")
 
         req_url = "https://" + self.dk_url + "/api/v1/tracks?eventAbbr={}".format(self.event_abbr)
         res = requests.get(req_url)
+        res.raise_for_status()
         res_payload = res.json()
         
         return res_payload
@@ -125,6 +194,7 @@ class Dreamkast:
 
         req_url = "https://" + self.dk_url + "/api/v1/events"
         res = requests.get(req_url)
+        res.raise_for_status()
         res_payload = res.json()
 
         # get event id
@@ -133,17 +203,17 @@ class Dreamkast:
         for event in res_payload:
             if event['abbr'] == self.event_abbr:
                 event_list_position = i
-            i = i + 1
+            i += 1
         
         return res_payload[event_list_position]['conferenceDays']
 
     def get_talks(self, conference_day_id):
-        logger.debug("get_talks()")
-        
         talks = []
 
         req_url = f"https://{self.dk_url}/api/v1/talks?eventAbbr={self.event_abbr}&conferenceDayIds={conference_day_id}"
+        logging.debug("request url: %s", req_url)
         res = requests.get(req_url)
+        res.raise_for_status()
         res_payload = res.json()
         
         for talk in res_payload:
@@ -151,6 +221,15 @@ class Dreamkast:
 
         return talks
 
+    def get_talk(self, talk_id):
+
+        req_url = f"https://{self.dk_url}/api/v1/talks/{talk_id}"
+        logging.debug("request url: %s", req_url)
+        res = requests.get(req_url)
+        res.raise_for_status()
+        
+        return res.json()
+    
     def create_talks(self):
         if not self.__check_dk_env(".dk.env"):
             print("token expired. please type 'cndctl dk update'")

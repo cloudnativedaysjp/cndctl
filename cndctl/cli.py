@@ -12,7 +12,7 @@ class Cli:
             bool: Y押下でTrue、それ以外でFalseを返す
         """
         while True:
-            choice = input(f"{message.lower}\n continue? [y/n] :")
+            choice = input(f"{message}\n continue? [y/n] :")
             if choice in ['y', 'yes']:
                 return True
             elif choice in ['n', 'no']:

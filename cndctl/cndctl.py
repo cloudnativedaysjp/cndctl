@@ -154,6 +154,9 @@ def run():
                 sys.exit()
             dreamkast.onair(DK_TALK_ID)
 
+        elif args.operator == "track_talk":
+            dreamkast.cmd_track_talks("A")
+
         sys.exit()
 
     loop = asyncio.get_event_loop()

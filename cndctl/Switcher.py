@@ -112,6 +112,15 @@ class Switcher:
                     }
                 }))
 
+    def __set_exists_source(self, scene_name: str, source_name: str) -> None:
+        # シーンの作成と追加
+        self.requests.append(
+            simpleobsws.Request(
+                'CreateSceneItem', {
+                    'sceneName': scene_name,
+                    'sourcename': source_name
+                }))
+
     def __create_maintenance_scene(self) -> None:
         """メンテナンスシーンを作成します
         """
@@ -216,7 +225,7 @@ class Switcher:
         """
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[talk['track_name']]
+        input_url = nginx_configs[talk['track_name']]['url']
 
         config = {
             "is_local_file": False,
@@ -227,8 +236,7 @@ class Switcher:
 
         self.__create_presentation_scene(scene_name, input_kind, config)
 
-    def __create_online_standard(self, talk: dict,
-                                 nginx_configs: dict) -> None:
+    def __create_online_standard(self, talk: dict, nginx_configs: dict) -> None:
         """オンライン登壇フォーマットのシーンを作成する
 
         Args:
@@ -237,7 +245,7 @@ class Switcher:
         """
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[talk['track_name']]
+        input_url = nginx_configs[talk['track_name']]['url']
 
         config = {
             "is_local_file": False,
@@ -247,11 +255,14 @@ class Switcher:
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
+        # scene_name = self.__generate_scene_name(talk)
+
+        # self.__set_exists_source(scene_name, source_name)
 
     def __create_keynote_scene(self, talk: dict, nginx_configs: dict) -> None:
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[self.keynote_track_name]
+        input_url = nginx_configs[self.keynote_track_name]['url']
 
         config = {
             "is_local_file": False,
@@ -262,6 +273,26 @@ class Switcher:
 
         self.__create_presentation_scene(scene_name, input_kind, config)
 
+    def create_nginx_source(self, source_name: str, nginx_url: str) -> None:
+        """nginxを参照するメディアソースを作成します。
+        あくまでも、ソースを作成するので、これを参照したい場合は __set_exists_source を利用してください。
+
+        Args:
+            source_name (str): 作成するソース名を指定
+            nginx_url (str): 参照するNginxの宛先（RTMP）を指定
+        """
+        scene_name = source_name
+        input_kind = "ffmpeg_source"
+        input_url = nginx_url
+
+        config = {
+            "is_local_file": False,
+            "restart_on_activate": False,
+            "buffering_mb": 2,
+            "input": input_url
+        }
+
+        self.__create_presentation_scene(scene_name, input_kind, config)
 
     async def build(self, dk: Dreamkast, ws: simpleobsws) -> None:
         """SwitcherのOBSにシーンコレクションを作成します
@@ -269,25 +300,40 @@ class Switcher:
         Args:
             dk (Dreamkast): Dreamkastのインスタンスオブジェクト
             ws (simpleobsws): simpleobswsのインスタンスオブジェクト
-        """
+        """        
         nginx_configs = {
-            "A":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-a",
-            "B":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-b",
-            "C":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-c",
-            "D":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-d",
-            "E":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-e",
-            "F":
-            "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-f"
+            "A": {
+                "name": "studio-A",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-a"
+            },
+            "B": {
+                "name": "studio-B",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-b"
+            },
+            "C": {
+                "name": "studio-C",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-c"
+            },
+            "D": {
+                "name": "studio-D",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-d"
+            },
+            "E": {
+                "name": "remote-E",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-e",
+            },
+            "F": {
+                "name": "remote-f",
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-f"
+            }
         }
 
         talks_days = dk.create_talks()
         with open('talks_cndt2022.json', 'w', encoding="utf-8") as file_pointa:
             json.dump(talks_days, file_pointa, indent=4, ensure_ascii=False)
+
+        # for track in talks_days[0]:
+        #     self.create_nginx_source(track['name'], track['url'])
 
         for day in talks_days:
             # print(day['date'])
@@ -312,7 +358,7 @@ class Switcher:
 
                     # print(f"| |-{start_at_time}-{end_at_time}_{talk['title']}")
 
-                    logging.debug(f"track for: {talk}")
+                    logging.debug("track for: %s", talk)
 
                     if talk['abstract'] == "intermission":
                         self.__create_rest_scene(talk)
@@ -325,17 +371,14 @@ class Switcher:
                     elif talk['presentation_method'] == "オンライン登壇":
                         self.__create_online_standard(talk, nginx_configs)
                     else:
-                        logging.error(
-                            f"undefined method: {talk['presentation_method']}, talk: {talk}"
-                        )
+                        logging.error("undefined method: %s, talk: %s", talk['presentation_method'], talk)
 
                 # scenecollectionごとにリクエストする
                 # pprint.pprint(self.requests)
                 for request in self.requests:
                     ret = await ws.call(request)
                     if not ret.ok():
-                        logger.error(
-                            f"Request error. Request:{request} Response:{ret}")
+                        logger.error("Request error. Request:%s Response:%s", request, ret)
                         # sys.exit()
 
                 # 送信完了したので初期化する

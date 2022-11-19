@@ -208,7 +208,7 @@ class Switcher:
                     # speaker video
                     "hidden": False,
                     "selected": False,
-                    "value": f"{self.uploader_base_path}/{talk['title']}.mp4"
+                    "value": f"{self.uploader_base_path}/{talk['id']}.mp4"
                 },
             ]
         }

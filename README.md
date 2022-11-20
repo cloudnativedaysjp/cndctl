@@ -1,7 +1,14 @@
 # cndctl
 
+## 必要なもの
+- Python 3
+- Linux(WSL) or macOS
+
 ## インストール方法
-[./package/](./package/)内のバイナリをダウンロードして任意の環境で実行。
+
+1. Git リポジトリをクローンする
+2. プロジェクトルートで `pip3 install -r requirements.txt` を実行する
+3. `python3 -m cndctl --help` を実行してUsageが出てきたら、インストール成功
 
 ## 使い方
 
@@ -19,7 +26,7 @@
 #### 1. jsonファイルを使用する
 本リポジトリの[./example.json](./example.json)のようにJSONファイルを作成し、次のコマンドのように実行時に指定します。
 
-`cndctl --secret example.json scene get`
+`python3 -m cndctl --secret example.json scene get`
 
 #### 2. 環境変数を利用する
 
@@ -54,31 +61,31 @@
 
 ### シーン関連の操作
 #### シーンの一覧を取得
-`cndctl scene get`
+`python3 -m cndctl scene get`
 
 #### 次のシーンに切り替え
-`cndctl scene next`
+`python3 -m cndctl scene next`
 
 #### 指定したシーンに切り替え
-`cndctl scene change --sceneName={SCENE_NAME}`
+`python3 -m cndctl scene change --sceneName={SCENE_NAME}`
 
 ##### fzfを利用した切り替え
-`./cndctl --secret switcher01.json scene change --sceneName="$(cndctl --secret switcher01.json scene get | fzf)"`
+`python3 -m cndctl --secret switcher01.json scene change --sceneName="$(python3 -m cndctl --secret switcher01.json scene get | fzf)"`
 
 ### メディアソース関連の操作
 #### メディアソースの残り時間を取得
-`cndctl mediasource time --sourceName={SOURCE_NAME}`
+`python3 -m cndctl mediasource time --sourceName={SOURCE_NAME}`
 
 ### Dreamkast関連の操作
 #### トークンの生成
-`cndctl dk update`
+`python3 -m cndctl dk update`
 ※Tokenの期限が残っている場合は実行しない
 
 #### OnAirステータスの切り替え
-`cndctl dk onair --dk-talk-id={DK_TALK_ID}`
+`python3 -m cndctl dk onair --dk-talk-id={DK_TALK_ID}`
 
 ### Switcher初期化
-`cndctl switcher build`
+`python3 -m cndctl switcher build`
 
 ```
 cndctl

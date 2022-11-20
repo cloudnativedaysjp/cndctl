@@ -4,3 +4,4 @@
 *.spec
 .dk.env
 secrets.json
+.env

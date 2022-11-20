@@ -1,6 +1,6 @@
 /dist
 /build
-/__pycache__
+*/__pycache__
 *.spec
 .dk.env
 secrets.json

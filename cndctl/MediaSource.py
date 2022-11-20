@@ -8,11 +8,11 @@ class MediaSource:
     def __init__(self) -> None:
         pass
 
-    async def set(ws):
+    async def set(self, ws):
         logger.debug("set_mediasource()")
 
     # cndctl mediasource time {source_name}
-    async def time(ws, source_name):
+    async def time(self, ws, source_name):
         logger.debug("get_mediasource_time({})".format(source_name))
         while True:
             request = simpleobsws.Request('GetMediaInputStatus', {'inputName': source_name})
@@ -27,5 +27,5 @@ class MediaSource:
                 # time.sleep(1)
 
     # cndctl mediasource get
-    async def get(ws):
+    async def get(self, ws):
         logger.debug("get_mediasource")

@@ -4,15 +4,16 @@ import asyncio
 import simpleobsws
 import os
 import sys
-from . import cli
+from .cli import Cli
 
 class Scene:
     
     def __init__(self) -> None:
+        self.cli = Cli()
         pass
 
     # cndctl scene get
-    async def get(ws):
+    async def get(self, ws):
         request = simpleobsws.Request('GetSceneList')
 
         ret = await ws.call(request)
@@ -28,7 +29,7 @@ class Scene:
 
 
     # cndctl scene next
-    async def next(ws):
+    async def next(self, ws):
         logger.debug("set_next()")
 
         request = simpleobsws.Request('GetSceneList')
@@ -51,7 +52,7 @@ class Scene:
         else:
             logger.info("nextScene: [{}]{}".format(nextSceneIndex, scenes[nextSceneIndex]))
 
-        if not cli.accept_continue("Change scene to '{}'".format(scenes[nextSceneIndex]['sceneName'])):
+        if not self.cli.accept_continue("Change scene to '{}'".format(scenes[nextSceneIndex]['sceneName'])):
             sys.exit()
 
         request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': scenes[nextSceneIndex]['sceneName']})
@@ -65,7 +66,7 @@ class Scene:
 
 
     # cndctl scene set {sceneName}
-    async def change(ws, sceneName):
+    async def change(self, ws, sceneName):
         logger.debug("set_scene({})".format(sceneName))
 
         request = simpleobsws.Request('GetSceneList')
@@ -80,7 +81,7 @@ class Scene:
             logger.info("Not found scene: {}".format(sceneName))
             sys.exit()
 
-        if not cli.accept_continue("Change scene to '{}'".format(sceneName)):
+        if not self.cli.accept_continue("Change scene to '{}'".format(sceneName)):
             sys.exit()
 
         request = simpleobsws.Request('SetCurrentProgramScene', {'sceneName': sceneName})

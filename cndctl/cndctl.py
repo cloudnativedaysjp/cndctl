@@ -173,14 +173,15 @@ def run():
     # scene
     if args.object == "scene":
         if args.operator == "get":
-            loop.run_until_complete(scene.get())
+            loop.run_until_complete(scene.get(ws))
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
-            loop.run_until_complete(scene.change(args.sceneName))
+            loop.run_until_complete(scene.change(ws, args.sceneName))
         elif args.operator == "next":
-            loop.run_until_complete(scene.next())
+            loop.run_until_complete(scene.next(ws))
+
     # source
     elif args.object == "source":
         if args.operator == "get":

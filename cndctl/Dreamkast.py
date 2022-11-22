@@ -10,6 +10,7 @@ import datetime
 import jwt
 
 from .cli import Cli
+from zoneinfo import ZoneInfo
 
 class Dreamkast:
     
@@ -134,6 +135,9 @@ class Dreamkast:
         conference_day_ids = self.get_conference_day_ids()
         for day_id in conference_day_ids:
             if day_id['internal'] == True:
+                continue
+
+            if day_id['date'] != datetime.datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d'):
                 continue
 
             talks = self.get_talks(day_id['id'])

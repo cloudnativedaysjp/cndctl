@@ -175,17 +175,15 @@ class Dreamkast:
                 continue
 
             talks = self.get_talks(day_id['id'])
-            res = dict()
             for talk in talks:
                 if talk['onAir'] and talk['trackId'] == select_track_id:
-                    res = talk
+                    return talk
 
-            if not res:
-                res = {
+            # OnAirなTalkが存在しなければ0を返す
+            return {
                         'id': 0,
                         'title': "None"
                     }
-            return res
 
     def get_track_talks(self, track_name, conference_day_id) -> list:
         
@@ -200,7 +198,6 @@ class Dreamkast:
 
     def onair(self, dk_talk_id):
         cli = Cli()
-        logger.debug("dreamkast_onair()")
         
         next_talk = self.get_talk(dk_talk_id)
         next_talk_track_id = next_talk['trackId']
@@ -208,6 +205,7 @@ class Dreamkast:
         current_talk = self.get_current_onair_talk(next_talk_track_id)
         
         print(f"Track: {track_name}")
+        # OnAirなTalkがない場合の対応
         if current_talk["id"] == 0:
             print(f"current talk | No onAir 'Track {track_name}!'")
         else:

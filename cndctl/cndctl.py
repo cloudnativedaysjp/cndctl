@@ -231,7 +231,7 @@ def run():
             if not args.sourceName:
                 logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(ws, args.sourceName))
+            loop.run_until_complete(mediasource.time(args.sourceName))
 
     # switcher
     elif args.object == "switcher":

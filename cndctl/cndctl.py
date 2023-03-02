@@ -10,6 +10,7 @@ from .MediaSource import MediaSource
 from .Scene import Scene
 from .Source import Source
 from .Switcher import Switcher
+from .Nextcloud import Nextcloud
 
 import argparse
 import asyncio
@@ -34,6 +35,7 @@ parser.add_argument("--dk-talk-id")
 parser.add_argument("--event-abbr")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
+parser.add_argument("--dry-run", action='store_true')
 
 args = parser.parse_args()
 
@@ -46,6 +48,7 @@ DK_CLIENT_SECRETS = ""
 DK_AUTH0_URL = ""
 DK_TALK_ID = ""
 EVENT_ABBR = ""
+DRY_RUN = False
 
 # envirouments
 if "WSHOST" in os.environ:
@@ -98,6 +101,18 @@ if args.secret:
                 'event_abbr']:
             EVENT_ABBR = secret['dreamkast']['event_abbr']
 
+    if "nextcloud" in secret:
+        if "url" in secret['nextcloud'] and secret['nextcloud']['url']:
+            UPLOADER_URL = secret['nextcloud']['url']
+        if "base_path" in secret['nextcloud'] and secret['nextcloud']['base_path']:
+            UPLOADER_BASE_DIR = secret['nextcloud']['base_path']
+        if "user" in secret['nextcloud'] and secret['nextcloud']['user']:
+            UPLOADER_USER = secret['nextcloud']['user']
+        if "pass" in secret['nextcloud'] and secret['nextcloud']['pass']:
+            UPLOADER_PASS = secret['nextcloud']['pass']
+        if "event_talk_file_path" in secret['nextcloud'] and secret['nextcloud']['event_talk_file_path']:
+            UPLOADER_TALK_FILE_PATH = secret['nextcloud']['event_talk_file_path']
+
 # command option
 if args.obs_host:
     OBS_HOST = args.obs_host
@@ -117,6 +132,8 @@ if args.dk_talk_id:
     DK_TALK_ID = args.dk_talk_id
 if args.event_abbr:
     EVENT_ABBR = args.event_abbr
+if args.dry_run:
+    DRY_RUN = True
 
 logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
@@ -159,8 +176,22 @@ def run():
 
         sys.exit()
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(obsinit())
+
+    nextcloud = Nextcloud(
+        dreamkast,
+        UPLOADER_URL,
+        UPLOADER_USER,
+        UPLOADER_PASS,
+        UPLOADER_BASE_DIR,
+        UPLOADER_TALK_FILE_PATH,
+        DRY_RUN
+    )
+    
+    if args.object == "uploader":
+        if args.operator == "dirsync":
+            nextcloud.dirsync()
+        
+        sys.exit()
 
     NEXTCLOUD_BASE_PATH = "/home/ubuntu/Nextcloud/Broadcast/CNDT2022"
     UPLOADER_BASE_PATH = "/home/ubuntu/Nextcloud2/cndt2022"

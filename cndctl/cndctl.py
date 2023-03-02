@@ -214,6 +214,7 @@ def run():
             loop.run_until_complete(scene.change(args.sceneName))
         elif args.operator == "next":
             loop.run_until_complete(scene.next())
+
     # source
     elif args.object == "source":
         if args.operator == "get":
@@ -230,7 +231,7 @@ def run():
             if not args.sourceName:
                 logger.error("No enough options: --sourceName")
                 sys.exit()
-            loop.run_until_complete(mediasource.time(args.sourceName))
+            loop.run_until_complete(mediasource.time(ws, args.sourceName))
 
     # switcher
     elif args.object == "switcher":

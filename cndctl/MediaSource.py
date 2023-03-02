@@ -5,19 +5,19 @@ import datetime
 
 class MediaSource:
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, ws) -> None:
+        self.ws = ws
 
-    async def set(ws):
+    async def set(self):
         logger.debug("set_mediasource()")
 
     # cndctl mediasource time {source_name}
-    async def time(ws, source_name):
-        logger.debug("get_mediasource_time({})".format(source_name))
+    async def time(self, source_name):
+        logger.debug("get_mediasource_time(%s)", source_name)
         while True:
             request = simpleobsws.Request('GetMediaInputStatus', {'inputName': source_name})
 
-            ret = await ws.call(request)
+            ret = await self.ws.call(request)
             if ret.ok():
                 state = ret.responseData['mediaState']
                 cursor = datetime.timedelta(milliseconds=ret.responseData['mediaCursor'])
@@ -27,5 +27,5 @@ class MediaSource:
                 # time.sleep(1)
 
     # cndctl mediasource get
-    async def get(ws):
+    async def get(self):
         logger.debug("get_mediasource")

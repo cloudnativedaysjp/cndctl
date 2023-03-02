@@ -9,7 +9,7 @@ import base64
 import datetime
 import jwt
 
-from .cli import Cli
+from .Cli import Cli
 
 class Dreamkast:
     
@@ -86,7 +86,41 @@ class Dreamkast:
 
     def talks(self):
         logger.debug("dreamkast_update()")
+
+    def put_upload_url(talkid, upload_url, token):
+        req_url = "https://event.cloudnativedays.jp/api/v1/talks/{}/video_registration".format(talkid)
+        headers = {
+            'Authorization': 'Bearer {}'.format(token)
+        }
+        data = {
+            "url":""
+        }
+        data['url'] = upload_url
+
+        res = requests.put(req_url, headers=headers, data=json.dumps(data))
+
+    def set_video_registration(self, talkid: int, video_drop_url: str) -> bool:
+        """talkごとのアップロードURLをセットします
+
+        Args:
+            talkid (int): セットしたいtalkのid
+            video_drop_url (str): 登壇者がアップロードするNextcloudのURL
+
+        Returns:
+            bool: リクエストが成功した場合はTrue, それ以外はFalseを返します
+        """
         
+        res = self.__request_dk_api(
+            f"/talks/{talkid}/video_registration",
+            "put",
+            video_drop_url
+        )
+        
+        if res['message'] == "OK":
+            return True
+        else:
+            return False
+     
     def __request_dk_api(self, api_path: str, method: str, data: dict={}, param: str = "") -> dict:
         """DKへAPIリクエストし、レスポンスボディを返します
 
@@ -129,7 +163,7 @@ class Dreamkast:
         res_payload = res.json()
         return res_payload
         
-    def get_current_onair_talk(self) -> dict:
+    def get_current_onair_talk(self, select_track_id: int) -> dict:
         # get all talks
         conference_day_ids = self.get_conference_day_ids()
         for day_id in conference_day_ids:
@@ -137,7 +171,17 @@ class Dreamkast:
                 continue
 
             talks = self.get_talks(day_id['id'])
-            return [talk for talk in talks if talk['onAir']][0]
+            res = dict()
+            for talk in talks:
+                if talk['onAir'] and talk['trackId'] == select_track_id:
+                    res = talk
+
+            if not res:
+                res = {
+                        'id': 0,
+                        'title': "None"
+                    }
+            return res
 
     def get_track_talks(self, track_name, conference_day_id) -> list:
         
@@ -154,16 +198,22 @@ class Dreamkast:
         cli = Cli()
         logger.debug("dreamkast_onair()")
         
-        current_talk = self.get_current_onair_talk()
         next_talk = self.get_talk(dk_talk_id)
+        next_talk_track_id = next_talk['trackId']
+        track_name = self.get_track_name(next_talk_track_id)['name']
+        current_talk = self.get_current_onair_talk(next_talk_track_id)
         
-        print(f"current talk | id: {current_talk['id']} title: {current_talk['title']}")
-        print(f"next talk    | id: {next_talk['id']} title: {next_talk['title']}")
+        print(f"Track: {track_name}")
+        if current_talk["id"] == 0:
+            print(f"current talk | No onAir 'Track {track_name}!'")
+        else:
+            print(f"current talk | id: {current_talk['id']} title: {current_talk['title']}")
+        print(f"next    talk | id: {next_talk['id']} title: {next_talk['title']}")
         
         msg = f"Change onair to '{dk_talk_id}'"
         if not cli.accept_continue(msg):
             sys.exit()
-        
+
         path = f"/talks/{dk_talk_id}"
         data = {
             "on_air": True

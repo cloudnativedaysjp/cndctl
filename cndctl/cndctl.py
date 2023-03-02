@@ -66,7 +66,7 @@ if "DK_CLIENT_ID" in os.environ:
 if "DK_CLIENT_SECRET" in os.environ:
     DK_CLIENT_SECRETS = os.environ["DK_CLIENT_SECRET"]
 if "EVENT_ABBR" in os.environ:
-    DK_CLIENT_SECRETS = os.environ["EVENT_ABBR"]
+    EVENT_ABBR = os.environ["EVENT_ABBR"]
 
 # json
 
@@ -147,7 +147,6 @@ async def obsinit():
     await ws.connect()
     await ws.wait_until_identified()
 
-
 def run():
 
     dreamkast = Dreamkast(DK_URL, DK_AUTH0_URL, DK_CLIENT_ID,
@@ -196,8 +195,11 @@ def run():
     NEXTCLOUD_BASE_PATH = "/home/ubuntu/Nextcloud/Broadcast/CNDT2022"
     UPLOADER_BASE_PATH = "/home/ubuntu/Nextcloud2/cndt2022"
 
-    mediasource = MediaSource()
-    scene = Scene()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(obsinit())
+
+    mediasource = MediaSource(ws)
+    scene = Scene(ws)
     source = Source()
     switcher = Switcher(NEXTCLOUD_BASE_PATH, UPLOADER_BASE_PATH, "A")
 

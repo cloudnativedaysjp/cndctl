@@ -145,9 +145,8 @@ class Dreamkast:
         
         req_url = f"https://{self.dk_url}/api/v1{api_path}{param}"
         headers = {
-            'Authorization': 'Bearer {}'.format(token)
+            'Authorization': f'Bearer {token}'
         }
-        
         logging.debug("request\nmethod: %s\nurl   : %s\nheader: %s\ndata  : %s", method, req_url, headers, data)
         
         if method == "get":
@@ -164,37 +163,57 @@ class Dreamkast:
         res_payload = res.json()
         return res_payload
         
-    def get_current_onair_talk(self, select_track_id: int) -> dict:
-        # get all talks
-        conference_day_ids = self.get_conference_day_ids()
-        for day_id in conference_day_ids:
-            if day_id['internal'] == True:
+    def get_current_onair_talk(self, track_id: int) -> dict:
+        
+        tracks = self.get_track()
+        onari_talk = dict()
+        for track in tracks:
+            if track['id'] == track_id and track['onAirTalk'] is not None:
+                return self.get_talk(track['onAirTalk']['talk_id'])
                 continue
-
-            if day_id['date'] != datetime.datetime.now(ZoneInfo("Asia/Tokyo")).strftime('%Y-%m-%d'):
-                continue
-
-            talks = self.get_talks(day_id['id'])
-            for talk in talks:
-                if talk['onAir'] and talk['trackId'] == select_track_id:
-                    return talk
-
-            # OnAirなTalkが存在しなければ0を返す
-            return {
-                        'id': 0,
-                        'title': "None"
-                    }
+            else:
+                return {
+                    'id': 0,
+                    'title': "None"
+                }
 
     def get_track_talks(self, track_name, conference_day_id) -> list:
         
         talks = self.get_talks(conference_day_id)
-        print(talks)
-        talks_for_track = [talk for talk in talks if talk['track_name'] == track_name]
+        tracks = self.get_track()
+        track_id = 0
+        for track in tracks:
+            if track['name'] == track_name:
+                track_id = track['id']
         
-        print(talks_for_track)
+        talks_for_track = [talk for talk in talks if talk['trackId'] == track_id]
+        return talks_for_track
 
-    def cmd_track_talks(self, track_name: str) -> None:
-        pass
+    def get_track_talks_cmd(self, track_name: str, event_date: str) -> None:
+        day_ids = self.get_conference_day_ids()
+        talks = []
+        for day_id in day_ids:
+            if day_id['date'] == event_date:
+                    talks = self.get_track_talks(track_name, day_id['id'])
+
+        tracks = self.get_track()
+        track_id = 0
+        for track in tracks:
+            if track['name'] == track_name:
+                track_id = track['id']
+        
+        current_onair_talk_id = self.get_current_onair_talk(track_id)['id']
+
+        for talk in talks:
+            talk['start_at'] = datetime.datetime.fromisoformat(talk['actualStartTime']).time()
+            talk['end_at']   = datetime.datetime.fromisoformat(talk['actualEndTime']).time()
+            talk['duration'] = datetime.datetime.fromisoformat(talk['actualEndTime']) - datetime.datetime.fromisoformat(talk['actualStartTime'])
+
+        for talk in sorted(talks, key=lambda x: x['start_at']):
+            onair_status = " "
+            if current_onair_talk_id == talk['id']:
+                onair_status = "*"
+            print(f"{onair_status} {talk['id']} [{talk['start_at']} - {talk['end_at']}]({talk['duration']}): {talk['title']}")
 
     def onair(self, dk_talk_id):
         cli = Cli()
@@ -203,7 +222,7 @@ class Dreamkast:
         next_talk_track_id = next_talk['trackId']
         track_name = self.get_track_name(next_talk_track_id)['name']
         current_talk = self.get_current_onair_talk(next_talk_track_id)
-        
+
         print(f"Track: {track_name}")
         # OnAirなTalkがない場合の対応
         if current_talk["id"] == 0:
@@ -220,7 +239,7 @@ class Dreamkast:
         data = {
             "on_air": True
         }
-        
+
         print(self.__request_dk_api(path, "put", data)['message'])
 
     def get_track(self):
@@ -256,7 +275,7 @@ class Dreamkast:
             if event['abbr'] == self.event_abbr:
                 event_list_position = i
             i += 1
-        
+
         return res_payload[event_list_position]['conferenceDays']
 
     def get_talks(self, conference_day_id):
@@ -272,6 +291,15 @@ class Dreamkast:
             talks.append(talk)
 
         return talks
+    
+    def get_talks_cmd(self):
+        day_ids = self.get_conference_day_ids()
+        
+        talks = list()
+        for day_id in day_ids:
+            talks.extend(self.get_talks(day_id['id']))
+            
+        print(json.dumps(talks, ensure_ascii=False))
 
     def get_talk(self, talk_id):
 
@@ -281,7 +309,11 @@ class Dreamkast:
         res.raise_for_status()
         
         return res.json()
-    
+
+    def request_dk_get(self, path, data):
+        res = self.__request_dk_api(path, "get", data)
+        print(json.dumps(res, ensure_ascii=False))
+
     def create_talks(self):
         if not self.__check_dk_env(".dk.env"):
             print("token expired. please type 'cndctl dk update'")

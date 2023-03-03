@@ -33,8 +33,12 @@ parser.add_argument("--dk-client-id")
 parser.add_argument("--dk-client-secrets")
 parser.add_argument("--dk-talk-id")
 parser.add_argument("--event-abbr")
+parser.add_argument("--event-date")
+parser.add_argument("--track")
 parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
+parser.add_argument("--api-path")
+parser.add_argument("--api-data")
 parser.add_argument("--dry-run", action='store_true')
 
 args = parser.parse_args()
@@ -47,7 +51,12 @@ DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
 DK_AUTH0_URL = ""
 DK_TALK_ID = ""
+DK_API_PATH = ""
+DK_API_METHOD = ""
+DK_API_DATA = ""
+EVENT_TRACK = ""
 EVENT_ABBR = ""
+EVENT_DATE = ""
 DRY_RUN = False
 
 # envirouments
@@ -132,8 +141,16 @@ if args.dk_talk_id:
     DK_TALK_ID = args.dk_talk_id
 if args.event_abbr:
     EVENT_ABBR = args.event_abbr
+if args.event_date:
+    EVENT_DATE = args.event_date
+if args.track:
+    EVENT_TRACK = args.track
 if args.dry_run:
     DRY_RUN = True
+if args.api_path:
+    DK_API_PATH = args.api_path
+if args.api_data:
+    DK_API_DATA = args.api_data
 
 logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
@@ -170,8 +187,17 @@ def run():
                 sys.exit()
             dreamkast.onair(DK_TALK_ID)
 
-        elif args.operator == "track_talk":
-            dreamkast.cmd_track_talks("A")
+        elif args.operator == "track_talks":
+            dreamkast.get_track_talks_cmd(EVENT_TRACK, EVENT_DATE)
+        
+        elif args.operator == "get_api":
+            if not DK_API_PATH:
+                print("No enough option: --api-path")
+            dreamkast.request_dk_get(DK_API_PATH, DK_API_DATA)
+        elif args.operator == "get_talks":
+            if not EVENT_ABBR:
+                print("No enough option: --event-abbr")
+            dreamkast.get_talks_cmd()
 
         sys.exit()
 

@@ -3,12 +3,14 @@
 ## 必要なもの
 - Python 3
 - Linux(WSL) or macOS
+- (オプション)[direnv](https://github.com/direnv/direnv/blob/master/docs/installation.md)があると環境変数を勝手に読み込めるようになるので便利
 
 ## インストール方法
 
 1. Git リポジトリをクローンする
 2. プロジェクトルートで `pip3 install -r requirements.txt` を実行する
 3. `python3 -m cndctl --help` を実行してUsageが出てきたら、インストール成功
+4. direnvと組み合わせる形で`.env`ファイルに必要な環境変数を書いておくと、オプションを渡さなくてよくなるので便利
 
 ## 使い方
 

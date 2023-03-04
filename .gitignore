@@ -4,3 +4,5 @@
 *.spec
 .dk.env
 secrets.json
+stating.json
+prod.json

@@ -1,10 +1,6 @@
-import asyncio
 import json
 import logging
-import pprint
-import sys
 
-import requests
 import simpleobsws
 
 from .Dreamkast import Dreamkast

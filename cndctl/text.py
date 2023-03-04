@@ -1,11 +1,6 @@
 import logging
 
 logger = logging.getLogger(__name__)
-import asyncio
-import os
-import sys
-
-import simpleobsws
 
 
 # cndctl text edit

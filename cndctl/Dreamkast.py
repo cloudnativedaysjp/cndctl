@@ -1,13 +1,10 @@
 import logging
-from email import header
 
 logger = logging.getLogger(__name__)
-import base64
 import datetime
 import json
 import os
 import sys
-from zoneinfo import ZoneInfo
 
 import jwt
 import requests

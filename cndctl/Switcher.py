@@ -3,9 +3,9 @@ import json
 import logging
 import pprint
 import sys
-import simpleobsws
 
 import requests
+import simpleobsws
 
 from .Dreamkast import Dreamkast
 
@@ -13,17 +13,16 @@ logger = logging.getLogger(__name__)
 import datetime
 import logging
 
-
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
+    level=logging.DEBUG, format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+)
 
 
 class Switcher:
-
-    def __init__(self, nextcloud_base_path: str,
-                 uploader_base_path: str, keynote_track_name: str) -> None:
+    def __init__(
+        self, nextcloud_base_path: str, uploader_base_path: str, keynote_track_name: str
+    ) -> None:
         """Switcher関連の初期化
 
         Args:
@@ -35,17 +34,17 @@ class Switcher:
 
         self.nextcloud_base_path = nextcloud_base_path
         self.uploader_base_path = uploader_base_path
-        
-        track_names = [
-            "A", "B", "C", "D", "E", "F"
-        ]
-        
+
+        track_names = ["A", "B", "C", "D", "E", "F"]
+
         for track_name in track_names:
             if keynote_track_name == track_name:
                 self.keynote_track_name = keynote_track_name
-        
+
         if self.keynote_track_name == "":
-            logging.error(f"Keynote track name is not expected value. :{keynote_track_name}")
+            logging.error(
+                f"Keynote track name is not expected value. :{keynote_track_name}"
+            )
 
     def __generate_scene_name(self, talk: dict) -> str:
         """与えられたTalk情報からシーン名を生成します
@@ -56,8 +55,8 @@ class Switcher:
         Returns:
             str: {TRACK-NAME}_{TALK-ID}_{START-TIME}_{END-TIME}_{TRACK-TITLE} フォーマットの文字列を返します
         """
-        start_at = datetime.datetime.fromisoformat(talk['start_at'])
-        end_at = datetime.datetime.fromisoformat(talk['end_at'])
+        start_at = datetime.datetime.fromisoformat(talk["start_at"])
+        end_at = datetime.datetime.fromisoformat(talk["end_at"])
 
         start_at_time = f"{start_at.hour:d}:{start_at.minute:02d}"
         end_at_time = f"{end_at.hour:d}:{end_at.minute:02d}"
@@ -73,12 +72,15 @@ class Switcher:
         """
 
         self.requests.append(
-            simpleobsws.Request('CreateSceneCollection',
-                                {'sceneCollectionName': scenecollection_name}))
+            simpleobsws.Request(
+                "CreateSceneCollection", {"sceneCollectionName": scenecollection_name}
+            )
+        )
 
     # シーンとシーンに紐づくソースをまとめて作成する
-    def __create_presentation_scene(self, scene_name: str, input_kind: str,
-                                    input_settings: dict) -> None:
+    def __create_presentation_scene(
+        self, scene_name: str, input_kind: str, input_settings: dict
+    ) -> None:
         """シーンとシーンに紐づくソースをまとめて作成する
 
         Args:
@@ -88,61 +90,69 @@ class Switcher:
         """
         # シーンの作成
         self.requests.append(
-            simpleobsws.Request('CreateScene', {'sceneName': scene_name}))
+            simpleobsws.Request("CreateScene", {"sceneName": scene_name})
+        )
 
         # インプットソースを作成
         self.requests.append(
             simpleobsws.Request(
-                'CreateInput', {
-                    'sceneName': scene_name,
-                    'inputName': f"{scene_name}_media",
-                    'inputKind': input_kind,
-                    'inputSettings': input_settings
-                }))
+                "CreateInput",
+                {
+                    "sceneName": scene_name,
+                    "inputName": f"{scene_name}_media",
+                    "inputKind": input_kind,
+                    "inputSettings": input_settings,
+                },
+            )
+        )
 
         # ソースにFullHDのFilterを追加
         self.requests.append(
             simpleobsws.Request(
-                'CreateSourceFilter', {
-                    'sourceName': f"{scene_name}_media",
-                    'filterName': 'スケーリング/アスペクト比',
-                    'filterKind': 'scale_filter',
-                    'filterSettings': {
-                        'resolution': '1920x1080'
-                    }
-                }))
+                "CreateSourceFilter",
+                {
+                    "sourceName": f"{scene_name}_media",
+                    "filterName": "スケーリング/アスペクト比",
+                    "filterKind": "scale_filter",
+                    "filterSettings": {"resolution": "1920x1080"},
+                },
+            )
+        )
 
     def __set_exists_source(self, scene_name: str, source_name: str) -> None:
         # シーンの作成と追加
         self.requests.append(
             simpleobsws.Request(
-                'CreateSceneItem', {
-                    'sceneName': scene_name,
-                    'sourcename': source_name
-                }))
+                "CreateSceneItem", {"sceneName": scene_name, "sourcename": source_name}
+            )
+        )
 
     def __create_maintenance_scene(self) -> None:
-        """メンテナンスシーンを作成します
-        """
+        """メンテナンスシーンを作成します"""
 
         scene_name = "調整中"
         input_kind = "ffmpeg_source"
-        input_url = self.nextcloud_base_path + '/Sync/Media/z-common/please_wait(調整中).mp4'
+        input_url = (
+            self.nextcloud_base_path + "/Sync/Media/z-common/please_wait(調整中).mp4"
+        )
 
-        config = {'local_file': input_url, 'looping': True}
+        config = {"local_file": input_url, "looping": True}
 
         self.requests.append(
             simpleobsws.Request(
-                'CreateInput', {
-                    'sceneName': "調整中",
-                    'inputName': "調整中_media",
-                    'inputKind': 'ffmpeg_source',
-                    'inputSettings': {
-                        'local_file': self.nextcloud_base_path +
-                        '/Sync/Media/z-common/please_wait(調整中).mp4',
-                        'looping': True
-                    }
-                }))
+                "CreateInput",
+                {
+                    "sceneName": "調整中",
+                    "inputName": "調整中_media",
+                    "inputKind": "ffmpeg_source",
+                    "inputSettings": {
+                        "local_file": self.nextcloud_base_path
+                        + "/Sync/Media/z-common/please_wait(調整中).mp4",
+                        "looping": True,
+                    },
+                },
+            )
+        )
 
         self.__create_presentation_scene(scene_name, input_kind, config)
 
@@ -159,19 +169,15 @@ class Switcher:
             "playlist": [
                 {
                     # 幕間
-                    "hidden":
-                    False,
-                    "selected":
-                    False,
-                    "value":
-                    f"{self.nextcloud_base_path}/Sync/Media/broadcast-{talk['track_name']}/makuai/{talk['id']}.mp4"
+                    "hidden": False,
+                    "selected": False,
+                    "value": f"{self.nextcloud_base_path}/Sync/Media/broadcast-{talk['track_name']}/makuai/{talk['id']}.mp4",
                 },
                 {
                     # CM をディレクトリとして追加
                     "hidden": False,
                     "selected": False,
-                    "value":
-                    f"{self.nextcloud_base_path}//Sync/Media/z-common/cm"
+                    "value": f"{self.nextcloud_base_path}//Sync/Media/z-common/cm",
                 },
             ]
         }
@@ -179,8 +185,7 @@ class Switcher:
         self.__create_presentation_scene(scene_name, input_kind, config)
 
     def delete_default_scene(self):
-        """デフォルトで作成される'シーン'という名前のシーンを削除する
-        """
+        """デフォルトで作成される'シーン'という名前のシーンを削除する"""
         pass
 
     def __create_vidoe_standard(self, talk: dict) -> None:
@@ -197,26 +202,22 @@ class Switcher:
             "playlist": [
                 {
                     # uploader
-                    "hidden":
-                    False,
-                    "selected":
-                    False,
-                    "value":
-                    f"{self.nextcloud_base_path}/Sync/Media/z-common/cndt2022_Countdown60.mp4"
+                    "hidden": False,
+                    "selected": False,
+                    "value": f"{self.nextcloud_base_path}/Sync/Media/z-common/cndt2022_Countdown60.mp4",
                 },
                 {
                     # speaker video
                     "hidden": False,
                     "selected": False,
-                    "value": f"{self.uploader_base_path}/{talk['id']}.mp4"
+                    "value": f"{self.uploader_base_path}/{talk['id']}.mp4",
                 },
             ]
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
 
-    def __create_offline_standard(self, talk: dict,
-                                  nginx_configs: dict) -> None:
+    def __create_offline_standard(self, talk: dict, nginx_configs: dict) -> None:
         """現地登壇フォーマットのシーンを作成する
 
         Args:
@@ -225,13 +226,13 @@ class Switcher:
         """
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[talk['track_name']]['url']
+        input_url = nginx_configs[talk["track_name"]]["url"]
 
         config = {
             "is_local_file": False,
             "restart_on_activate": False,
             "buffering_mb": 2,
-            "input": input_url
+            "input": input_url,
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
@@ -245,13 +246,13 @@ class Switcher:
         """
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[talk['track_name']]['url']
+        input_url = nginx_configs[talk["track_name"]]["url"]
 
         config = {
             "is_local_file": False,
             "restart_on_activate": False,
             "buffering_mb": 2,
-            "input": input_url
+            "input": input_url,
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
@@ -262,13 +263,13 @@ class Switcher:
     def __create_keynote_scene(self, talk: dict, nginx_configs: dict) -> None:
         scene_name = self.__generate_scene_name(talk)
         input_kind = "ffmpeg_source"
-        input_url = nginx_configs[self.keynote_track_name]['url']
+        input_url = nginx_configs[self.keynote_track_name]["url"]
 
         config = {
             "is_local_file": False,
             "restart_on_activate": False,
             "buffering_mb": 2,
-            "input": input_url
+            "input": input_url,
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
@@ -289,7 +290,7 @@ class Switcher:
             "is_local_file": False,
             "restart_on_activate": False,
             "buffering_mb": 2,
-            "input": input_url
+            "input": input_url,
         }
 
         self.__create_presentation_scene(scene_name, input_kind, config)
@@ -300,23 +301,23 @@ class Switcher:
         Args:
             dk (Dreamkast): Dreamkastのインスタンスオブジェクト
             ws (simpleobsws): simpleobswsのインスタンスオブジェクト
-        """        
+        """
         nginx_configs = {
             "A": {
                 "name": "studio-A",
-                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-a"
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-a",
             },
             "B": {
                 "name": "studio-B",
-                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-b"
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-b",
             },
             "C": {
                 "name": "studio-C",
-                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-c"
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-c",
             },
             "D": {
                 "name": "studio-D",
-                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-d"
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-studio-d",
             },
             "E": {
                 "name": "remote-E",
@@ -324,12 +325,12 @@ class Switcher:
             },
             "F": {
                 "name": "remote-f",
-                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-f"
-            }
+                "url": "rtmp://nginx01.cloudnativedays.jp:10002/live/cndt2022-remote-f",
+            },
         }
 
         talks_days = dk.create_talks()
-        with open('talks_cndt2022.json', 'w', encoding="utf-8") as file_pointa:
+        with open("talks_cndt2022.json", "w", encoding="utf-8") as file_pointa:
             json.dump(talks_days, file_pointa, indent=4, ensure_ascii=False)
 
         # for track in talks_days[0]:
@@ -338,8 +339,7 @@ class Switcher:
         for day in talks_days:
             # print(day['date'])
 
-            for track in day['tracks']:
-
+            for track in day["tracks"]:
                 # print(f"|-{track['name']}")
 
                 scenecollection_name = f"{day['date']}_{track['name']}"
@@ -348,7 +348,7 @@ class Switcher:
                 # 調整中シーンを作成する
                 # self.__create_maintenance_scene()
 
-                for talk in track['talks']:
+                for talk in track["talks"]:
                     # start_at = datetime.datetime.fromisoformat(
                     #     talk['start_at'])
                     # start_at_time = f"{start_at.hour:d}:{start_at.minute:02d}"
@@ -360,25 +360,31 @@ class Switcher:
 
                     logging.debug("track for: %s", talk)
 
-                    if talk['abstract'] == "intermission":
+                    if talk["abstract"] == "intermission":
                         self.__create_rest_scene(talk)
-                    elif talk['category'] == "Keynote":
+                    elif talk["category"] == "Keynote":
                         self.__create_keynote_scene(talk, nginx_configs)
-                    elif talk['presentation_method'] == "事前収録":
+                    elif talk["presentation_method"] == "事前収録":
                         self.__create_vidoe_standard(talk)
-                    elif talk['presentation_method'] == "現地登壇":
+                    elif talk["presentation_method"] == "現地登壇":
                         self.__create_offline_standard(talk, nginx_configs)
-                    elif talk['presentation_method'] == "オンライン登壇":
+                    elif talk["presentation_method"] == "オンライン登壇":
                         self.__create_online_standard(talk, nginx_configs)
                     else:
-                        logging.error("undefined method: %s, talk: %s", talk['presentation_method'], talk)
+                        logging.error(
+                            "undefined method: %s, talk: %s",
+                            talk["presentation_method"],
+                            talk,
+                        )
 
                 # scenecollectionごとにリクエストする
                 # pprint.pprint(self.requests)
                 for request in self.requests:
                     ret = await ws.call(request)
                     if not ret.ok():
-                        logger.error("Request error. Request:%s Response:%s", request, ret)
+                        logger.error(
+                            "Request error. Request:%s Response:%s", request, ret
+                        )
                         # sys.exit()
 
                 # 送信完了したので初期化する

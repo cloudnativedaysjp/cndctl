@@ -182,6 +182,8 @@ def run():
                 sys.exit()
             dreamkast.update()
         elif args.operator == "onair":
+            if args.operator == "next":
+                dreamkast.onair_next()
             if not DK_TALK_ID:
                 print("No enough options: --dk-talk-id")
                 sys.exit()

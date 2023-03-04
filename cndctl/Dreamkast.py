@@ -215,6 +215,34 @@ class Dreamkast:
                 onair_status = "*"
             print(f"{onair_status} {talk['id']} [{talk['start_at']} - {talk['end_at']}]({talk['duration']}): {talk['title']}")
 
+    def onair_next(self):
+        cli = Cli()
+
+        print("success to move talk to next")
+        # next_talk = self.get_talk(dk_talk_id)
+        # next_talk_track_id = next_talk["trackId"]
+        # track_name = self.get_track_name(next_talk_track_id)["name"]
+        # current_talk = self.get_current_onair_talk(next_talk_track_id)
+
+        # print(f"Track: {track_name}")
+        # # OnAirなTalkがない場合の対応
+        # if current_talk["id"] == 0:
+        #     print(f"current talk | No onAir 'Track {track_name}!'")
+        # else:
+        #     print(
+        #         f"current talk | id: {current_talk['id']} title: {current_talk['title']}"
+        #     )
+        # print(f"next    talk | id: {next_talk['id']} title: {next_talk['title']}")
+
+        # msg = f"Change onair to '{dk_talk_id}'"
+        # if not cli.accept_continue(msg):
+        #     sys.exit()
+
+        # path = f"/talks/{dk_talk_id}"
+        # data = {"on_air": True}
+
+        # print(self.__request_dk_api(path, "put", data)["message"])
+
     def onair(self, dk_talk_id):
         cli = Cli()
         

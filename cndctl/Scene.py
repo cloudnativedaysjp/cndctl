@@ -54,7 +54,7 @@ class Scene:
 
         next_scene_index = current_program_scene_index - 1
         if next_scene_index < 0:
-            logger.info("current scene is tha last scene.")
+            logger.info("current scene is the last scene.")
         else:
             logger.info("nextScene: [%s]%s", next_scene_index, scenes[next_scene_index])
 
@@ -65,6 +65,46 @@ class Scene:
 
         request = simpleobsws.Request(
             "SetCurrentProgramScene",
+            {"sceneName": scenes[next_scene_index]["sceneName"]},
+        )
+
+        ret = await self.ws.call(request)
+        if not ret.ok():
+            logger.error("Request error. Request:%s Response:%s", request, ret)
+            sys.exit()
+
+        if next_scene_index == 0:
+            logger.info("no more next scene to preview.")
+        else:
+            next_scene_index -= 1
+            logger.info(
+                "nextScene to preview: [%s]%s",
+                next_scene_index,
+                scenes[next_scene_index],
+            )
+
+        request = simpleobsws.Request(
+            "SetCurrentPreviewScene",
+            {"sceneName": scenes[next_scene_index]["sceneName"]},
+        )
+
+        ret = await self.ws.call(request)
+        if not ret.ok():
+            logger.error("Request error. Request:%s Response:%s", request, ret)
+            sys.exit()
+
+        if next_scene_index == 0:
+            logger.info("no more next scene to preview.")
+        else:
+            next_scene_index -= 1
+            logger.info(
+                "nextScene to preview: [%s]%s",
+                next_scene_index,
+                scenes[next_scene_index],
+            )
+
+        request = simpleobsws.Request(
+            "SetCurrentPreviewScene",
             {"sceneName": scenes[next_scene_index]["sceneName"]},
         )
 

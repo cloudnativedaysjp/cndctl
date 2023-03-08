@@ -167,11 +167,9 @@ class Dreamkast:
 
     def get_current_onair_talk(self, track_id: int) -> dict:
         tracks = self.get_track()
-        onari_talk = dict()
         for track in tracks:
             if track["id"] == track_id and track["onAirTalk"] is not None:
                 return self.get_talk(track["onAirTalk"]["talk_id"])
-                continue
             else:
                 return {"id": 0, "title": "None"}
 
@@ -187,19 +185,31 @@ class Dreamkast:
         return talks_for_track
 
     def get_track_talks_cmd(self, track_name: str, event_date: str) -> None:
-        day_ids = self.get_conference_day_ids()
-        talks = []
-        for day_id in day_ids:
-            if day_id["date"] == event_date:
-                talks = self.get_track_talks(track_name, day_id["id"])
+        talks = self.get_talks_in_track_and_event_date(track_name, event_date)
+        for talk in talks:
+            talk["start_at"] = datetime.datetime.fromisoformat(
+                talk["actualStartTime"]
+            ).time()
+            talk["end_at"] = datetime.datetime.fromisoformat(
+                talk["actualEndTime"]
+            ).time()
+            talk["duration"] = datetime.datetime.fromisoformat(
+                talk["actualEndTime"]
+            ) - datetime.datetime.fromisoformat(talk["actualStartTime"])
 
         tracks = self.get_track()
-        track_id = 0
-        for track in tracks:
-            if track["name"] == track_name:
-                track_id = track["id"]
-
+        track_id = self.get_track_id(track_name, tracks)
         current_onair_talk_id = self.get_current_onair_talk(track_id)["id"]
+        for talk in sorted(talks, key=lambda x: x["start_at"]):
+            onair_status = " "
+            if current_onair_talk_id == talk["id"]:
+                onair_status = "*"
+            print(
+                f"{onair_status} {talk['id']} [{talk['start_at']} - {talk['end_at']}]({talk['duration']}): {talk['title']}"
+            )
+
+    def onair_next(self, track_name: str, event_date: str):
+        talks = self.get_talks_in_track_and_event_date(track_name, event_date)
 
         for talk in talks:
             talk["start_at"] = datetime.datetime.fromisoformat(
@@ -212,41 +222,16 @@ class Dreamkast:
                 talk["actualEndTime"]
             ) - datetime.datetime.fromisoformat(talk["actualStartTime"])
 
-        for talk in sorted(talks, key=lambda x: x["start_at"]):
-            onair_status = " "
+        tracks = self.get_track()
+        track_id = self.get_track_id(track_name, tracks)
+        current_onair_talk_id = self.get_current_onair_talk(track_id)["id"]
+
+        sorted_talks = sorted(talks, key=lambda x: x["start_at"])
+        for i, talk in enumerate(sorted_talks):
             if current_onair_talk_id == talk["id"]:
-                onair_status = "*"
-            print(
-                f"{onair_status} {talk['id']} [{talk['start_at']} - {talk['end_at']}]({talk['duration']}): {talk['title']}"
-            )
-
-    def onair_next(self):
-        cli = Cli()
-
-        print("success to move talk to next")
-        # next_talk = self.get_talk(dk_talk_id)
-        # next_talk_track_id = next_talk["trackId"]
-        # track_name = self.get_track_name(next_talk_track_id)["name"]
-        # current_talk = self.get_current_onair_talk(next_talk_track_id)
-
-        # print(f"Track: {track_name}")
-        # # OnAirなTalkがない場合の対応
-        # if current_talk["id"] == 0:
-        #     print(f"current talk | No onAir 'Track {track_name}!'")
-        # else:
-        #     print(
-        #         f"current talk | id: {current_talk['id']} title: {current_talk['title']}"
-        #     )
-        # print(f"next    talk | id: {next_talk['id']} title: {next_talk['title']}")
-
-        # msg = f"Change onair to '{dk_talk_id}'"
-        # if not cli.accept_continue(msg):
-        #     sys.exit()
-
-        # path = f"/talks/{dk_talk_id}"
-        # data = {"on_air": True}
-
-        # print(self.__request_dk_api(path, "put", data)["message"])
+                if len(sorted_talks) != i + 1:
+                    # 最後のtalk以外の場合、オンエア切り替えを実施.
+                    self.onair(sorted_talks[i + 1]["id"])
 
     def onair(self, dk_talk_id):
         cli = Cli()
@@ -423,3 +408,16 @@ class Dreamkast:
             talks.append(talks_info)
 
         return talks
+
+    def get_talks_in_track_and_event_date(
+        self, track_name: str, event_date: str
+    ) -> list:
+        day_ids = self.get_conference_day_ids()
+        for day_id in day_ids:
+            if day_id["date"] == event_date:
+                return self.get_track_talks(track_name, day_id["id"])
+
+    def get_track_id(self, want_track_name: str, tracks: list) -> int:
+        for track in tracks:
+            if track["name"] == want_track_name:
+                return track["id"]

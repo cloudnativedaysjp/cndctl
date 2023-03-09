@@ -84,6 +84,9 @@
 #### OnAirステータスの切り替え
 `python3 -m cndctl dk onair --dk-talk-id={DK_TALK_ID}`
 
+#### OnAirステータスを一つ進める
+`python3 -m cndctl dk onair next`
+
 ### Switcher初期化
 `python3 -m cndctl switcher build`
 

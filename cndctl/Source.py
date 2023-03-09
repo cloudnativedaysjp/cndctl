@@ -1,12 +1,9 @@
 import logging
+
 logger = logging.getLogger(__name__)
-import asyncio
-import simpleobsws
-import os
-import sys
+
 
 class Source:
-
     def __init__(self) -> None:
         pass
 

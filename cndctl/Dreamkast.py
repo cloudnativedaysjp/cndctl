@@ -209,7 +209,13 @@ class Dreamkast:
             )
 
     def onair_next(self, track_name: str, event_date: str):
+        if event_date == "":
+            event_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
+        if not talks:
+            logging.error("Could not get Talks. Request config: DATE='%s', TRACK='%s'", event_date, track_name)
+            sys.exit()
 
         for talk in talks:
             talk["start_at"] = datetime.datetime.fromisoformat(

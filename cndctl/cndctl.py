@@ -192,9 +192,10 @@ def run():
                 sys.exit()
             dreamkast.onair(DK_TALK_ID)
         elif args.operator == "onair_next":
-            if not EVENT_TRACK or not EVENT_DATE:
+            if not EVENT_TRACK:
                 print("No enough options: --track or --event-date")
-                sys.exit()
+            elif not EVENT_DATE:
+                dreamkast.onair_next(EVENT_TRACK, "")
             dreamkast.onair_next(EVENT_TRACK, EVENT_DATE)
         elif args.operator == "track_talks":
             dreamkast.get_track_talks_cmd(EVENT_TRACK, EVENT_DATE)

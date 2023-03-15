@@ -46,6 +46,7 @@ args = parser.parse_args()
 OBS_HOST = ""
 OBS_PORT = ""
 OBS_PASS = ""
+JSON_FILE_PATH =""
 DK_URL = ""
 DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
@@ -78,9 +79,14 @@ if "EVENT_ABBR" in os.environ:
     EVENT_ABBR = os.environ["EVENT_ABBR"]
 
 # json
+if "CNDCTL_CURRENT_JSON_PATH" in os.environ:
+    JSON_FILE_PATH = os.environ["CNDCTL_CURRENT_JSON_PATH"]
 
 if args.secret:
-    with open(args.secret, encoding="utf-8") as f:
+    JSON_FILE_PATH = args.secret
+
+if JSON_FILE_PATH:
+    with open(JSON_FILE_PATH, encoding="utf-8") as f:
         secret = json.loads(f.read())
 
     if "obs" in secret:

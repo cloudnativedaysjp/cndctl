@@ -225,6 +225,10 @@ class Dreamkast:
         tracks = self.get_track()
         track_id = self.get_track_id(track_name, tracks)
         current_onair_talk_id = self.get_current_onair_talk(track_id)["id"]
+        # 現在OnAirなTalkが存在しない
+        if current_onair_talk_id == 0:
+            logging.error("There is no on-air talk. Please make a talk on-air and then execute it.")
+            sys.exit()
 
         sorted_talks = sorted(talks, key=lambda x: x["start_at"])
         for i, talk in enumerate(sorted_talks):
@@ -232,6 +236,9 @@ class Dreamkast:
                 if len(sorted_talks) != i + 1:
                     # 最後のtalk以外の場合、オンエア切り替えを実施.
                     self.onair(sorted_talks[i + 1]["id"])
+        
+        # OnAirなTalkは存在するが対象の event_date と track に存在しない
+        logging.warning("There is no OnAir Talk for the specified `event_date` and `track` combination. The currently OnAir Talks are: %s", self.get_talk(current_onair_talk_id))
 
     def onair(self, dk_talk_id):
         cli = Cli()

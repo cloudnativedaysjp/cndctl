@@ -26,7 +26,7 @@ class Scene:
         current_preview_scene = ret.responseData["currentPreviewSceneName"]
         logger.info(ret)
 
-        print("PG PR NAME")
+        print("PR PG NAME")
         for scene in reversed(scenes):
             logger.info("scene[%s]: %s", scene["sceneIndex"], scene["sceneName"])
             current_program = " "
@@ -36,7 +36,7 @@ class Scene:
 
             if scene["sceneName"] == current_preview_scene:
                 current_preview = "*"
-            print(f'{current_program}  {current_preview}  {scene["sceneName"]}')
+            print(f'{current_preview}  {current_program}  {scene["sceneName"]}')
 
     async def current(self):
         request = simpleobsws.Request("GetCurrentProgramScene")
@@ -113,28 +113,6 @@ class Scene:
         if not ret.ok():
             logger.error("Request error. Request:%s Response:%s", request, ret)
             sys.exit()
-
-        if next_scene_index == 0:
-            logger.info("no more next scene to preview.")
-        else:
-            next_scene_index -= 1
-            logger.info(
-                "nextScene to preview: [%s]%s",
-                next_scene_index,
-                scenes[next_scene_index],
-            )
-
-        request = simpleobsws.Request(
-            "SetCurrentPreviewScene",
-            {"sceneName": scenes[next_scene_index]["sceneName"]},
-        )
-
-        ret = await self.ws.call(request)
-        if not ret.ok():
-            logger.error("Request error. Request:%s Response:%s", request, ret)
-            sys.exit()
-
-        # logger.info("scene changed: {}".format(sceneName))
 
     # cndctl scene set {sceneName}
     async def change(self, sceneName):

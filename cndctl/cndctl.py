@@ -249,13 +249,16 @@ def run():
     if args.object == "scene":
         if args.operator == "get":
             loop.run_until_complete(scene.get())
+            sys.exit()
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(args.sceneName))
+            sys.exit()
         elif args.operator == "next":
             loop.run_until_complete(scene.next())
+            sys.exit()
 
     # source
     elif args.object == "source":
@@ -264,6 +267,7 @@ def run():
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(args.sceneName))
+            sys.exit()
 
     # mediasource
     elif args.object == "mediasource":
@@ -274,11 +278,13 @@ def run():
                 logger.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(args.sourceName))
+            sys.exit()
 
     # switcher
     elif args.object == "switcher":
         if args.operator == "build":
             loop.run_until_complete(switcher.build(dreamkast, ws))
+            sys.exit()
 
     # operator
     op = Operator(dreamkast, loop, scene)
@@ -289,7 +295,19 @@ def run():
                 print("No enough options: --track")
             elif not EVENT_DATE:
                 op.next_cmd()(EVENT_TRACK, "")
+                sys.exit()
             op.next_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+        if args.operator == "now":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.now_cmd()(EVENT_TRACK, "")
+                sys.exit()
+            op.now_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+            
 
     else:
         print(f"undefined command: {args}")
+        sys.exit(1)

@@ -22,11 +22,31 @@ class Scene:
             logger.error("Request error. Request:%s Response:%s", request, ret)
             sys.exit()
         scenes = ret.responseData["scenes"]
+        current_program_scene = ret.responseData["currentProgramSceneName"]
+        current_preview_scene = ret.responseData["currentPreviewSceneName"]
         logger.info(ret)
 
+        print("PG PR NAME")
         for scene in reversed(scenes):
             logger.info("scene[%s]: %s", scene["sceneIndex"], scene["sceneName"])
-            print(scene["sceneName"])
+            current_program = " "
+            current_preview = " "
+            if scene["sceneName"] == current_program_scene:
+                current_program = "*"
+
+            if scene["sceneName"] == current_preview_scene:
+                current_preview = "*"
+            print(f'{current_program}  {current_preview}  {scene["sceneName"]}')
+
+    async def current(self):
+        request = simpleobsws.Request("GetCurrentProgramScene")
+
+        ret = await self.ws.call(request)
+        if not ret.ok():
+            logger.error("Request error. Request:%s Response:%s", request, ret)
+            sys.exit()
+
+        return ret.responseData['currentProgramSceneName']
 
     # cndctl scene next
     async def next(self):

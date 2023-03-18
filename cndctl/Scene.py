@@ -47,7 +47,7 @@ class Scene:
             if scene["sceneName"] == ret.responseData["currentProgramSceneName"]
         ][0]
         current_program_scene_name = ret.responseData["currentProgramSceneName"]
-        print(current_program_scene_name)
+        print(f"current scene | {current_program_scene_name}")
         logger.info(
             "current: [%s]%s", current_program_scene_index, current_program_scene_name
         )
@@ -58,6 +58,7 @@ class Scene:
         else:
             logger.info("nextScene: [%s]%s", next_scene_index, scenes[next_scene_index])
 
+        print(f"next    scene | {scenes[next_scene_index]['sceneName']}")
         if not self.cli.accept_continue(
             f"Change scene to '{scenes[next_scene_index]['sceneName']}'"
         ):

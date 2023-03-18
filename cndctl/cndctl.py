@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.WARNING, format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+    level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
 import argparse
@@ -19,6 +19,7 @@ from .Nextcloud import Nextcloud
 from .Scene import Scene
 from .Source import Source
 from .Switcher import Switcher
+from .Operator import Operator
 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
@@ -201,7 +202,7 @@ def run():
             if not EVENT_TRACK:
                 print("No enough options: --track or --event-date")
             elif not EVENT_DATE:
-                dreamkast.onair_next(EVENT_TRACK, "")
+                dreamkast.onair_next_cmd(EVENT_TRACK, "")
             dreamkast.onair_next(EVENT_TRACK, EVENT_DATE)
         elif args.operator == "track_talks":
             dreamkast.get_track_talks_cmd(EVENT_TRACK, EVENT_DATE)
@@ -278,6 +279,17 @@ def run():
     elif args.object == "switcher":
         if args.operator == "build":
             loop.run_until_complete(switcher.build(dreamkast, ws))
+
+    # operator
+    op = Operator(dreamkast, loop, scene)
+
+    if args.object == "op":
+        if args.operator == "next":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.next_cmd()(EVENT_TRACK, "")
+            op.next_cmd(EVENT_TRACK, EVENT_DATE)
 
     else:
         print(f"undefined command: {args}")

@@ -208,8 +208,23 @@ class Dreamkast:
                 f"{onair_status} {talk['id']} [{talk['start_at']} - {talk['end_at']}]({talk['duration']}): {talk['title']}"
             )
 
+    def onair_next_cmd(self, track_name: str, event_date: str):
+        if event_date == "":
+            event_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        if self.onair_next(track_name, event_date):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
     def onair_next(self, track_name: str, event_date: str):
+        if event_date == "":
+            event_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
+        if not talks:
+            logging.error("Could not get Talks. Request config: DATE='%s', TRACK='%s'", event_date, track_name)
+            sys.exit()
 
         for talk in talks:
             talk["start_at"] = datetime.datetime.fromisoformat(
@@ -225,6 +240,10 @@ class Dreamkast:
         tracks = self.get_track()
         track_id = self.get_track_id(track_name, tracks)
         current_onair_talk_id = self.get_current_onair_talk(track_id)["id"]
+        # 現在OnAirなTalkが存在しない
+        if current_onair_talk_id == 0:
+            logging.error("There is no on-air talk. Please make a talk on-air and then execute it.")
+            return False
 
         sorted_talks = sorted(talks, key=lambda x: x["start_at"])
         for i, talk in enumerate(sorted_talks):
@@ -232,6 +251,11 @@ class Dreamkast:
                 if len(sorted_talks) != i + 1:
                     # 最後のtalk以外の場合、オンエア切り替えを実施.
                     self.onair(sorted_talks[i + 1]["id"])
+                    return True
+
+        # OnAirなTalkは存在するが対象の event_date と track に存在しない
+        logging.warning("There is no OnAir Talk for the specified `event_date` and `track` combination. The currently OnAir Talks are: %s", self.get_talk(current_onair_talk_id))
+        return False
 
     def onair(self, dk_talk_id):
         cli = Cli()

@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.WARNING, format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
+    level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
 import argparse
@@ -19,6 +19,7 @@ from .Nextcloud import Nextcloud
 from .Scene import Scene
 from .Source import Source
 from .Switcher import Switcher
+from .Operator import Operator
 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
@@ -46,6 +47,7 @@ args = parser.parse_args()
 OBS_HOST = ""
 OBS_PORT = ""
 OBS_PASS = ""
+JSON_FILE_PATH =""
 DK_URL = ""
 DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
@@ -78,9 +80,14 @@ if "EVENT_ABBR" in os.environ:
     EVENT_ABBR = os.environ["EVENT_ABBR"]
 
 # json
+if "CNDCTL_CURRENT_JSON_PATH" in os.environ:
+    JSON_FILE_PATH = os.environ["CNDCTL_CURRENT_JSON_PATH"]
 
 if args.secret:
-    with open(args.secret, encoding="utf-8") as f:
+    JSON_FILE_PATH = args.secret
+
+if JSON_FILE_PATH:
+    with open(JSON_FILE_PATH, encoding="utf-8") as f:
         secret = json.loads(f.read())
 
     if "obs" in secret:
@@ -192,9 +199,10 @@ def run():
                 sys.exit()
             dreamkast.onair(DK_TALK_ID)
         elif args.operator == "onair_next":
-            if not EVENT_TRACK or not EVENT_DATE:
+            if not EVENT_TRACK:
                 print("No enough options: --track or --event-date")
-                sys.exit()
+            elif not EVENT_DATE:
+                dreamkast.onair_next_cmd(EVENT_TRACK, "")
             dreamkast.onair_next(EVENT_TRACK, EVENT_DATE)
         elif args.operator == "track_talks":
             dreamkast.get_track_talks_cmd(EVENT_TRACK, EVENT_DATE)
@@ -241,13 +249,16 @@ def run():
     if args.object == "scene":
         if args.operator == "get":
             loop.run_until_complete(scene.get())
+            sys.exit()
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(args.sceneName))
+            sys.exit()
         elif args.operator == "next":
             loop.run_until_complete(scene.next())
+            sys.exit()
 
     # source
     elif args.object == "source":
@@ -256,6 +267,7 @@ def run():
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(args.sceneName))
+            sys.exit()
 
     # mediasource
     elif args.object == "mediasource":
@@ -266,11 +278,36 @@ def run():
                 logger.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(args.sourceName))
+            sys.exit()
 
     # switcher
     elif args.object == "switcher":
         if args.operator == "build":
             loop.run_until_complete(switcher.build(dreamkast, ws))
+            sys.exit()
+
+    # operator
+    op = Operator(dreamkast, loop, scene)
+
+    if args.object == "op":
+        if args.operator == "next":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.next_cmd()(EVENT_TRACK, "")
+                sys.exit()
+            op.next_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+        if args.operator == "now":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.now_cmd()(EVENT_TRACK, "")
+                sys.exit()
+            op.now_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+            
 
     else:
         print(f"undefined command: {args}")
+        sys.exit(1)

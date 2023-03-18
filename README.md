@@ -40,6 +40,7 @@
 - `DK_CLIENT_ID`: Auth0のトークンを生成するためのクライアントID
 - `DK_CLIENT_SECRETS`: Auth0のトークンを生成するためのクライアントシークレット
 - `DK_AUTH0_URL`: Auth0のトークンを生成するためのAuth0サブドメイン
+- `CNDCTL_CURRENT_JSON`: `--secret` を省略できる
 
 #### 3. コマンドオプションを利用する
 
@@ -79,13 +80,32 @@
 ### Dreamkast関連の操作
 #### トークンの生成
 `python3 -m cndctl dk update`
+
 ※Tokenの期限が残っている場合は実行しない
 
 #### OnAirステータスの切り替え
 `python3 -m cndctl dk onair --dk-talk-id={DK_TALK_ID}`
 
 #### OnAirステータスを一つ進める
-`python3 -m cndctl dk onair next`
+`python3 -m cndctl dk onair_next --track=A --event-date=2023-03-20`
+
+※`--event-date`は省略可
+
+#### 指定したトラックのOnAir一覧を取得する
+`python3 -m cndctl dk track_talks --track=A`
+
+#### Talksの一覧を取得する
+`python3 -m cndctl dk track_talks --event-abbr=cicd2023`
+
+#### DkのGET系APIを叩く
+`python3 -m cndctl dk get_api --api-path=/talks?eventAbbr=cicd2023&conferenceDayIds=21`
+
+### 統合オペレーション
+#### OnAir -> SceneをNextする
+`python3 -m cndctl op next`
+
+#### 現在のOnAir/Scene状況を取得する
+`python3 -m cndctl op now`
 
 ### Switcher初期化
 `python3 -m cndctl switcher build`

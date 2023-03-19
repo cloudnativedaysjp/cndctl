@@ -170,8 +170,8 @@ class Dreamkast:
         for track in tracks:
             if track["id"] == track_id and track["onAirTalk"] is not None:
                 return self.get_talk(track["onAirTalk"]["talk_id"])
-            else:
-                return {"id": 0, "title": "None"}
+
+        return {"id": 0, "title": "None"}
 
     def get_track_talks(self, track_name, conference_day_id) -> list:
         talks = self.get_talks(conference_day_id)

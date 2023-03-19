@@ -71,7 +71,8 @@
 `python3 -m cndctl scene change --sceneName={SCENE_NAME}`
 
 ##### fzfを利用した切り替え
-`python3 -m cndctl --secret switcher01.json scene change --sceneName="$(python3 -m cndctl --secret switcher01.json scene get | fzf)"`
+# CONFIG_JSON 部分を書き換えて利用
+`CONFIG_JSON=switcher01.json; python3 -m cndctl --secret $lCONFIG_JSON scene change --sceneName="$(python3 -m cndctl --secret $CONFIG_JSON scene get |grep -v 'PR PG NAME' |sed -re 's/^[\*\ ]+//' |fzf)"`
 
 ### メディアソース関連の操作
 #### メディアソースの残り時間を取得

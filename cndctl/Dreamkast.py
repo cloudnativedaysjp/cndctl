@@ -173,29 +173,21 @@ class Dreamkast:
 
         return {"id": 0, "title": "None"}
 
-    def get_track_talks(self, track_name, conference_day_id) -> list:
-        talks = self.get_talks(conference_day_id)
-        tracks = self.get_track()
-        track_id = 0
-        for track in tracks:
-            if track["name"] == track_name:
-                track_id = track["id"]
-
-        talks_for_track = [talk for talk in talks if talk["trackId"] == track_id]
-        return talks_for_track
-
-    def get_track_talks_cmd(self, track_name: str, event_date: str) -> None:
+    def get_track_talks(self, track_name: str, event_date: str) -> list:
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
         for talk in talks:
             talk["start_at"] = datetime.datetime.fromisoformat(
-                talk["actualStartTime"]
-            ).time()
+                talk["actualStartTime"]).time()
             talk["end_at"] = datetime.datetime.fromisoformat(
-                talk["actualEndTime"]
-            ).time()
+                talk["actualEndTime"]).time()
             talk["duration"] = datetime.datetime.fromisoformat(
-                talk["actualEndTime"]
-            ) - datetime.datetime.fromisoformat(talk["actualStartTime"])
+                talk["actualEndTime"]) - datetime.datetime.fromisoformat(
+                    talk["actualStartTime"])
+
+        return sorted(talks, key=lambda x: x["start_at"])
+
+    def get_track_talks_cmd(self, track_name: str, event_date: str) -> None:
+        talks = self.get_track_talks(track_name, event_date)
 
         tracks = self.get_track()
         track_id = self.get_track_id(track_name, tracks)
@@ -220,7 +212,7 @@ class Dreamkast:
     def onair_next(self, track_name: str, event_date: str):
         if event_date == "":
             event_date = datetime.datetime.now().strftime('%Y-%m-%d')
-        
+
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
         if not talks:
             logging.error("Could not get Talks. Request config: DATE='%s', TRACK='%s'", event_date, track_name)
@@ -437,9 +429,22 @@ class Dreamkast:
         self, track_name: str, event_date: str
     ) -> list:
         day_ids = self.get_conference_day_ids()
+        day_id_this_day = 0
         for day_id in day_ids:
             if day_id["date"] == event_date:
-                return self.get_track_talks(track_name, day_id["id"])
+                day_id_this_day = day_id['id']
+
+        talks = self.get_talks(day_id_this_day)
+        tracks = self.get_track()
+        track_id = 0
+        for track in tracks:
+            if track["name"] == track_name:
+                track_id = track["id"]
+
+        talks_for_track = [
+            talk for talk in talks if talk["trackId"] == track_id
+        ]
+        return talks_for_track
 
     def get_track_id(self, want_track_name: str, tracks: list) -> int:
         for track in tracks:

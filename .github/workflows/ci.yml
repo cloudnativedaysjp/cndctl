@@ -26,6 +26,7 @@ jobs:
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
       - name: Poetry Version
         run: |
+          ls -la
           poetry --version
       - name: Poetry Install Dependencies
         run: |

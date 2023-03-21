@@ -36,4 +36,4 @@ jobs:
           poetry run pytest
       - name: Lint with flake8
         run: |
-          poetry run flake8 --count --show-source --exit-zero --statistics --config setup.cfg && exit 1 || exit 0
+          poetry run flake8 --show-source --exit-zero --statistics --config setup.cfg

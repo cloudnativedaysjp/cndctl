@@ -1,5 +1,3 @@
-import subprocess
-
 from cndctl.Dreamkast import Dreamkast
 
 

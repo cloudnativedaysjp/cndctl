@@ -4,3 +4,6 @@
 *.spec
 .dk.env
 secrets.json
+staging.json
+prod.json
+.vscode

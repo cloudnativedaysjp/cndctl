@@ -2,15 +2,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.WARNING,
-    format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
-
-from .Dreamkast import Dreamkast
-from .MediaSource import MediaSource
-from .Scene import Scene
-from .Source import Source
-from .Switcher import Switcher
-from .Nextcloud import Nextcloud
+    level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 import argparse
 import asyncio
@@ -19,6 +12,14 @@ import os
 import sys
 
 import simpleobsws
+
+from .Dreamkast import Dreamkast
+from .MediaSource import MediaSource
+from .Nextcloud import Nextcloud
+from .Scene import Scene
+from .Source import Source
+from .Switcher import Switcher
+from .Operator import Operator
 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
@@ -39,13 +40,14 @@ parser.add_argument("--sceneName")
 parser.add_argument("--sourceName")
 parser.add_argument("--api-path")
 parser.add_argument("--api-data")
-parser.add_argument("--dry-run", action='store_true')
+parser.add_argument("--dry-run", action="store_true")
 
 args = parser.parse_args()
 
 OBS_HOST = ""
 OBS_PORT = ""
 OBS_PASS = ""
+JSON_FILE_PATH =""
 DK_URL = ""
 DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
@@ -78,49 +80,56 @@ if "EVENT_ABBR" in os.environ:
     EVENT_ABBR = os.environ["EVENT_ABBR"]
 
 # json
+if "CNDCTL_CURRENT_JSON_PATH" in os.environ:
+    JSON_FILE_PATH = os.environ["CNDCTL_CURRENT_JSON_PATH"]
 
 if args.secret:
-    with open(args.secret, encoding="utf-8") as f:
+    JSON_FILE_PATH = args.secret
+
+if JSON_FILE_PATH:
+    with open(JSON_FILE_PATH, encoding="utf-8") as f:
         secret = json.loads(f.read())
 
     if "obs" in secret:
-        obs = secret['obs']
+        obs = secret["obs"]
         logger.debug(obs)
 
-        if "host" in secret['obs'] and secret['obs']['host']:
-            OBS_HOST = secret['obs']['host']
-        if "port" in secret['obs'] and secret['obs']['port']:
-            OBS_PORT = secret['obs']['port']
-        if "password" in secret['obs'] and secret['obs']['password']:
-            OBS_PASS = secret['obs']['password']
+        if "host" in secret["obs"] and secret["obs"]["host"]:
+            OBS_HOST = secret["obs"]["host"]
+        if "port" in secret["obs"] and secret["obs"]["port"]:
+            OBS_PORT = secret["obs"]["port"]
+        if "password" in secret["obs"] and secret["obs"]["password"]:
+            OBS_PASS = secret["obs"]["password"]
 
     if "dreamkast" in secret:
-        if "url" in secret['dreamkast'] and secret['dreamkast']['url']:
-            DK_URL = secret['dreamkast']['url']
-        if "auth0_url" in secret['dreamkast'] and secret['dreamkast'][
-                'auth0_url']:
-            DK_AUTH0_URL = secret['dreamkast']['auth0_url']
-        if "client_id" in secret['dreamkast'] and secret['dreamkast'][
-                'client_id']:
-            DK_CLIENT_ID = secret['dreamkast']['client_id']
-        if "client_secrets" in secret['dreamkast'] and secret['dreamkast'][
-                'client_secrets']:
-            DK_CLIENT_SECRETS = secret['dreamkast']['client_secrets']
-        if "event_abbr" in secret['dreamkast'] and secret['dreamkast'][
-                'event_abbr']:
-            EVENT_ABBR = secret['dreamkast']['event_abbr']
+        if "url" in secret["dreamkast"] and secret["dreamkast"]["url"]:
+            DK_URL = secret["dreamkast"]["url"]
+        if "auth0_url" in secret["dreamkast"] and secret["dreamkast"]["auth0_url"]:
+            DK_AUTH0_URL = secret["dreamkast"]["auth0_url"]
+        if "client_id" in secret["dreamkast"] and secret["dreamkast"]["client_id"]:
+            DK_CLIENT_ID = secret["dreamkast"]["client_id"]
+        if (
+            "client_secrets" in secret["dreamkast"]
+            and secret["dreamkast"]["client_secrets"]
+        ):
+            DK_CLIENT_SECRETS = secret["dreamkast"]["client_secrets"]
+        if "event_abbr" in secret["dreamkast"] and secret["dreamkast"]["event_abbr"]:
+            EVENT_ABBR = secret["dreamkast"]["event_abbr"]
 
     if "nextcloud" in secret:
-        if "url" in secret['nextcloud'] and secret['nextcloud']['url']:
-            UPLOADER_URL = secret['nextcloud']['url']
-        if "base_path" in secret['nextcloud'] and secret['nextcloud']['base_path']:
-            UPLOADER_BASE_DIR = secret['nextcloud']['base_path']
-        if "user" in secret['nextcloud'] and secret['nextcloud']['user']:
-            UPLOADER_USER = secret['nextcloud']['user']
-        if "pass" in secret['nextcloud'] and secret['nextcloud']['pass']:
-            UPLOADER_PASS = secret['nextcloud']['pass']
-        if "event_talk_file_path" in secret['nextcloud'] and secret['nextcloud']['event_talk_file_path']:
-            UPLOADER_TALK_FILE_PATH = secret['nextcloud']['event_talk_file_path']
+        if "url" in secret["nextcloud"] and secret["nextcloud"]["url"]:
+            UPLOADER_URL = secret["nextcloud"]["url"]
+        if "base_path" in secret["nextcloud"] and secret["nextcloud"]["base_path"]:
+            UPLOADER_BASE_DIR = secret["nextcloud"]["base_path"]
+        if "user" in secret["nextcloud"] and secret["nextcloud"]["user"]:
+            UPLOADER_USER = secret["nextcloud"]["user"]
+        if "pass" in secret["nextcloud"] and secret["nextcloud"]["pass"]:
+            UPLOADER_PASS = secret["nextcloud"]["pass"]
+        if (
+            "event_talk_file_path" in secret["nextcloud"]
+            and secret["nextcloud"]["event_talk_file_path"]
+        ):
+            UPLOADER_TALK_FILE_PATH = secret["nextcloud"]["event_talk_file_path"]
 
 # command option
 if args.obs_host:
@@ -154,20 +163,23 @@ if args.api_data:
 
 logger.info("{}:{}({})".format(OBS_HOST, OBS_PORT, OBS_PASS))
 
-parameters = simpleobsws.IdentificationParameters(
-    ignoreNonFatalRequestChecks=False)
-ws = simpleobsws.WebSocketClient(url=f'ws://{OBS_HOST}:{OBS_PORT}',
-                                 password=OBS_PASS,
-                                 identification_parameters=parameters)
+parameters = simpleobsws.IdentificationParameters(ignoreNonFatalRequestChecks=False)
+ws = simpleobsws.WebSocketClient(
+    url=f"ws://{OBS_HOST}:{OBS_PORT}",
+    password=OBS_PASS,
+    identification_parameters=parameters,
+)
+
 
 async def obsinit():
     await ws.connect()
     await ws.wait_until_identified()
 
-def run():
 
-    dreamkast = Dreamkast(DK_URL, DK_AUTH0_URL, DK_CLIENT_ID,
-                          DK_CLIENT_SECRETS, EVENT_ABBR)
+def run():
+    dreamkast = Dreamkast(
+        DK_URL, DK_AUTH0_URL, DK_CLIENT_ID, DK_CLIENT_SECRETS, EVENT_ABBR
+    )
 
     if args.object == "dk":
         if args.operator == "update":
@@ -186,10 +198,15 @@ def run():
                 print("No enough options: --dk-talk-id")
                 sys.exit()
             dreamkast.onair(DK_TALK_ID)
-
+        elif args.operator == "onair_next":
+            if not EVENT_TRACK:
+                print("No enough options: --track or --event-date")
+            elif not EVENT_DATE:
+                dreamkast.onair_next_cmd(EVENT_TRACK, "")
+            dreamkast.onair_next(EVENT_TRACK, EVENT_DATE)
         elif args.operator == "track_talks":
             dreamkast.get_track_talks_cmd(EVENT_TRACK, EVENT_DATE)
-        
+
         elif args.operator == "get_api":
             if not DK_API_PATH:
                 print("No enough option: --api-path")
@@ -201,7 +218,6 @@ def run():
 
         sys.exit()
 
-
     nextcloud = Nextcloud(
         dreamkast,
         UPLOADER_URL,
@@ -209,13 +225,13 @@ def run():
         UPLOADER_PASS,
         UPLOADER_BASE_DIR,
         UPLOADER_TALK_FILE_PATH,
-        DRY_RUN
+        DRY_RUN,
     )
-    
+
     if args.object == "uploader":
         if args.operator == "dirsync":
             nextcloud.dirsync()
-        
+
         sys.exit()
 
     NEXTCLOUD_BASE_PATH = "/home/ubuntu/Nextcloud/Broadcast/CNDT2022"
@@ -233,13 +249,16 @@ def run():
     if args.object == "scene":
         if args.operator == "get":
             loop.run_until_complete(scene.get())
+            sys.exit()
         elif args.operator == "change":
             if not args.sceneName:
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(scene.change(args.sceneName))
+            sys.exit()
         elif args.operator == "next":
             loop.run_until_complete(scene.next())
+            sys.exit()
 
     # source
     elif args.object == "source":
@@ -248,6 +267,7 @@ def run():
                 logger.error("No enough options: --sceneName")
                 sys.exit()
             loop.run_until_complete(source.get(args.sceneName))
+            sys.exit()
 
     # mediasource
     elif args.object == "mediasource":
@@ -258,11 +278,36 @@ def run():
                 logger.error("No enough options: --sourceName")
                 sys.exit()
             loop.run_until_complete(mediasource.time(args.sourceName))
+            sys.exit()
 
     # switcher
     elif args.object == "switcher":
         if args.operator == "build":
             loop.run_until_complete(switcher.build(dreamkast, ws))
+            sys.exit()
+
+    # operator
+    op = Operator(dreamkast, loop, scene)
+
+    if args.object == "op":
+        if args.operator == "next":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.next_cmd()(EVENT_TRACK, "")
+                sys.exit()
+            op.next_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+        if args.operator == "now":
+            if not EVENT_TRACK:
+                print("No enough options: --track")
+            elif not EVENT_DATE:
+                op.now_cmd()(EVENT_TRACK, "")
+                sys.exit()
+            op.now_cmd(EVENT_TRACK, EVENT_DATE)
+            sys.exit()
+            
 
     else:
         print(f"undefined command: {args}")
+        sys.exit(1)

@@ -1,13 +1,7 @@
-import logging
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s"
-)
-
 import argparse
 import asyncio
 import json
+import logging
 import os
 import sys
 
@@ -16,10 +10,15 @@ import simpleobsws
 from .Dreamkast import Dreamkast
 from .MediaSource import MediaSource
 from .Nextcloud import Nextcloud
+from .Operator import Operator
 from .Scene import Scene
 from .Source import Source
 from .Switcher import Switcher
-from .Operator import Operator
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 parser = argparse.ArgumentParser(description="obs remote controll cli tool")
 parser.add_argument("object")
@@ -47,7 +46,7 @@ args = parser.parse_args()
 OBS_HOST = ""
 OBS_PORT = ""
 OBS_PASS = ""
-JSON_FILE_PATH =""
+JSON_FILE_PATH = ""
 DK_URL = ""
 DK_CLIENT_ID = ""
 DK_CLIENT_SECRETS = ""
@@ -306,7 +305,6 @@ def run():
                 sys.exit()
             op.now_cmd(EVENT_TRACK, EVENT_DATE)
             sys.exit()
-            
 
     else:
         print(f"undefined command: {args}")

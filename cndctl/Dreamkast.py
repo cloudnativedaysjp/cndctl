@@ -1,8 +1,6 @@
-import logging
-
-logger = logging.getLogger(__name__)
 import datetime
 import json
+import logging
 import os
 import sys
 
@@ -10,6 +8,8 @@ import jwt
 import requests
 
 from .Cli import Cli
+
+logger = logging.getLogger(__name__)
 
 
 class Dreamkast:
@@ -96,7 +96,7 @@ class Dreamkast:
         data = {"url": ""}
         data["url"] = upload_url
 
-        res = requests.put(req_url, headers=headers, data=json.dumps(data))
+        requests.put(req_url, headers=headers, data=json.dumps(data))
 
     def set_video_registration(self, talkid: int, video_drop_url: str) -> bool:
         """talkごとのアップロードURLをセットします
@@ -133,7 +133,7 @@ class Dreamkast:
             dict: レスポンスボディを返します
         """
         if not self.__check_dk_env(env_file_path=".dk.env"):
-            logging.error(f"failed check env file. Please type 'dk update'")
+            logging.error("failed check env file. Please type 'dk update'")
             return {}
 
         token = self.__read_token(env_file_path=".dk.env")
@@ -177,12 +177,14 @@ class Dreamkast:
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
         for talk in talks:
             talk["start_at"] = datetime.datetime.fromisoformat(
-                talk["actualStartTime"]).time()
+                talk["actualStartTime"]
+            ).time()
             talk["end_at"] = datetime.datetime.fromisoformat(
-                talk["actualEndTime"]).time()
+                talk["actualEndTime"]
+            ).time()
             talk["duration"] = datetime.datetime.fromisoformat(
-                talk["actualEndTime"]) - datetime.datetime.fromisoformat(
-                    talk["actualStartTime"])
+                talk["actualEndTime"]
+            ) - datetime.datetime.fromisoformat(talk["actualStartTime"])
 
         return sorted(talks, key=lambda x: x["start_at"])
 
@@ -202,7 +204,7 @@ class Dreamkast:
 
     def onair_next_cmd(self, track_name: str, event_date: str):
         if event_date == "":
-            event_date = datetime.datetime.now().strftime('%Y-%m-%d')
+            event_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         if self.onair_next(track_name, event_date):
             sys.exit(0)
@@ -211,11 +213,15 @@ class Dreamkast:
 
     def onair_next(self, track_name: str, event_date: str):
         if event_date == "":
-            event_date = datetime.datetime.now().strftime('%Y-%m-%d')
+            event_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         talks = self.get_talks_in_track_and_event_date(track_name, event_date)
         if not talks:
-            logging.error("Could not get Talks. Request config: DATE='%s', TRACK='%s'", event_date, track_name)
+            logging.error(
+                "Could not get Talks. Request config: DATE='%s', TRACK='%s'",
+                event_date,
+                track_name,
+            )
             sys.exit()
 
         for talk in talks:
@@ -234,7 +240,9 @@ class Dreamkast:
         current_onair_talk_id = self.get_current_onair_talk(track_id)["id"]
         # 現在OnAirなTalkが存在しない
         if current_onair_talk_id == 0:
-            logging.error("There is no on-air talk. Please make a talk on-air and then execute it.")
+            logging.error(
+                "There is no on-air talk. Please make a talk on-air and then execute it."
+            )
             return False
 
         sorted_talks = sorted(talks, key=lambda x: x["start_at"])
@@ -246,7 +254,10 @@ class Dreamkast:
                     return True
 
         # OnAirなTalkは存在するが対象の event_date と track に存在しない
-        logging.warning("There is no OnAir Talk for the specified `event_date` and `track` combination. The currently OnAir Talks are: %s", self.get_talk(current_onair_talk_id))
+        logging.warning(
+            "There is no OnAir Talk for the specified `event_date` and `track` combination. The currently OnAir Talks are: %s",
+            self.get_talk(current_onair_talk_id),
+        )
         return False
 
     def onair(self, dk_talk_id):
@@ -432,7 +443,7 @@ class Dreamkast:
         day_id_this_day = 0
         for day_id in day_ids:
             if day_id["date"] == event_date:
-                day_id_this_day = day_id['id']
+                day_id_this_day = day_id["id"]
 
         talks = self.get_talks(day_id_this_day)
         tracks = self.get_track()
@@ -441,9 +452,7 @@ class Dreamkast:
             if track["name"] == track_name:
                 track_id = track["id"]
 
-        talks_for_track = [
-            talk for talk in talks if talk["trackId"] == track_id
-        ]
+        talks_for_track = [talk for talk in talks if talk["trackId"] == track_id]
         return talks_for_track
 
     def get_track_id(self, want_track_name: str, tracks: list) -> int:

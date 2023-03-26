@@ -285,8 +285,7 @@ class Dreamkast:
         path = f"/talks/{dk_talk_id}"
         data = {"on_air": True}
 
-        res = self.__request_dk_api(path, "put", data)
-        print(res["message"])
+        print(self.__request_dk_api(path, "put", data))
 
     def get_track(self):
         logger.debug("get_track_name()")

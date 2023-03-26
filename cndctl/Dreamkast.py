@@ -88,7 +88,7 @@ class Dreamkast:
     def talks(self):
         logger.debug("dreamkast_update()")
 
-    def put_upload_url(talkid, upload_url, token):
+    def put_upload_url(self, talkid, upload_url, token):
         req_url = "https://event.cloudnativedays.jp/api/v1/talks/{}/video_registration".format(
             talkid
         )
@@ -285,7 +285,8 @@ class Dreamkast:
         path = f"/talks/{dk_talk_id}"
         data = {"on_air": True}
 
-        print(self.__request_dk_api(path, "put", data)["message"])
+        res = self.__request_dk_api(path, "put", data)
+        print(res["message"])
 
     def get_track(self):
         logger.debug("get_track_name()")

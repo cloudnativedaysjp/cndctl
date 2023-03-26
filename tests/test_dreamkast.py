@@ -320,4 +320,7 @@ def test_onair_next():
                     mock_get_track.return_value = current_talk_data
 
                     # execute
-                    dk.onair_next(track_name=track_name, event_date=event_date)
+                    result = dk.onair_next(track_name=track_name, event_date=event_date)
+
+                    # verify
+                    assert result == True

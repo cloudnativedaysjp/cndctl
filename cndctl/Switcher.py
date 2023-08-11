@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 
@@ -6,10 +7,7 @@ import simpleobsws
 from .Dreamkast import Dreamkast
 
 logger = logging.getLogger(__name__)
-import datetime
-import logging
 
-logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
 )

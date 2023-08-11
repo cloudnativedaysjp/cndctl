@@ -1,9 +1,9 @@
+import datetime
 import logging
 
-logger = logging.getLogger(__name__)
-import datetime
-
 import simpleobsws
+
+logger = logging.getLogger(__name__)
 
 
 class MediaSource:

@@ -1,11 +1,11 @@
 import logging
-
-logger = logging.getLogger(__name__)
 import sys
 
 import simpleobsws
 
 from .Cli import Cli
+
+logger = logging.getLogger(__name__)
 
 
 class Scene:
@@ -46,7 +46,7 @@ class Scene:
             logger.error("Request error. Request:%s Response:%s", request, ret)
             sys.exit()
 
-        return ret.responseData['currentProgramSceneName']
+        return ret.responseData["currentProgramSceneName"]
 
     # cndctl scene next
     async def next(self):

@@ -1,3 +1,0 @@
-import cndctl
-
-cndctl.run()

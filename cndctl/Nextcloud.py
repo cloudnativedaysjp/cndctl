@@ -1,17 +1,17 @@
-import logging
-
-logger = logging.getLogger(__name__)
-
 import csv
 import json
+import logging
 import os
 import sys
 
 import requests
 import urllib3
+from nextcloud import NextCloud
+
+logger = logging.getLogger(__name__)
+
 
 urllib3.disable_warnings()
-from nextcloud import NextCloud
 
 
 class Nextcloud:
@@ -41,7 +41,7 @@ class Nextcloud:
         data = {"url": ""}
         data["url"] = upload_url
 
-        res = requests.put(req_url, headers=headers, data=json.dumps(data))
+        requests.put(req_url, headers=headers, data=json.dumps(data))
 
     def dirsync(self):
         print("uploader dirsync command can not use!")
@@ -67,7 +67,7 @@ class Nextcloud:
             session_kwargs={"verify": False},
         ) as nxc:
             nxc_ping = nxc.get_connection_issues()
-            if not nxc_ping is None:
+            if nxc_ping is not None:
                 logging.error("Nextcloud connection failed! msg: %s", nxc_ping)
                 sys.exit()
 
